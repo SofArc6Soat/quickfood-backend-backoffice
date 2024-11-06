@@ -7,7 +7,8 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace Api.Controllers
 {
-    [Authorize(Policy = "AdminRole")]
+    //[Authorize(Policy = "AdminRole")]
+    [AllowAnonymous]
     [Route("produtos")]
     public class ProdutosApiController(IProdutoController produtosController, INotificador notificador) : MainController(notificador)
     {

@@ -1,11 +1,13 @@
-﻿using Domain.Entities;
+﻿using Core.Infra.MessageBroker;
+using Domain.Entities;
 using Domain.ValueObjects;
+using Gateways.Dtos.Events;
 using Infra.Dto;
 using Infra.Repositories;
 
 namespace Gateways
 {
-    public class ProdutoGateway(IProdutoRepository produtoRepository) : IProdutoGateway
+    public class ProdutoGateway(IProdutoRepository produtoRepository, ISqsService<ProdutoCriadoEvent> sqsProdutoCriado, ISqsService<ProdutoAtualizadoEvent> sqsProdutoAtualizado, ISqsService<ProdutoExcluidoEvent> sqsProdutoExcluido) : IProdutoGateway
     {
         public async Task<bool> CadastrarProdutoAsync(Produto produto, CancellationToken cancellationToken)
         {
@@ -21,7 +23,7 @@ namespace Gateways
 
             await produtoRepository.InsertAsync(produtoDto, cancellationToken);
 
-            return await produtoRepository.UnitOfWork.CommitAsync(cancellationToken);
+            return await produtoRepository.UnitOfWork.CommitAsync(cancellationToken) && await sqsProdutoCriado.SendMessageAsync(GerarProdutoCriadoEvent(produtoDto));
         }
 
         public async Task<bool> AtualizarProdutoAsync(Produto produto, CancellationToken cancellationToken)
@@ -38,14 +40,14 @@ namespace Gateways
 
             await produtoRepository.UpdateAsync(produtoDto, cancellationToken);
 
-            return await produtoRepository.UnitOfWork.CommitAsync(cancellationToken);
+            return await produtoRepository.UnitOfWork.CommitAsync(cancellationToken) && await sqsProdutoAtualizado.SendMessageAsync(GerarProdutoAtualizadoEvent(produtoDto));
         }
 
         public async Task<bool> DeletarProdutoAsync(Guid id, CancellationToken cancellationToken)
         {
             await produtoRepository.DeleteAsync(id, cancellationToken);
 
-            return await produtoRepository.UnitOfWork.CommitAsync(cancellationToken);
+            return await produtoRepository.UnitOfWork.CommitAsync(cancellationToken) && await sqsProdutoExcluido.SendMessageAsync(GerarProdutoExcluidoEvent(id));
         }
 
         public bool VerificarProdutoExistente(Guid id, string nome, string descricao, CancellationToken cancellationToken)
@@ -114,5 +116,30 @@ namespace Gateways
 
             return [];
         }
+
+        private static ProdutoCriadoEvent GerarProdutoCriadoEvent(ProdutoDb produtoDb) => new()
+        {
+            Id = produtoDb.Id,
+            Nome = produtoDb.Nome,
+            Descricao = produtoDb.Descricao,
+            Preco = produtoDb.Preco,
+            Categoria = produtoDb.Categoria.ToString(),
+            Ativo = produtoDb.Ativo
+        };
+
+        private static ProdutoAtualizadoEvent GerarProdutoAtualizadoEvent(ProdutoDb produtoDb) => new()
+        {
+            Id = produtoDb.Id,
+            Nome = produtoDb.Nome,
+            Descricao = produtoDb.Descricao,
+            Preco = produtoDb.Preco,
+            Categoria = produtoDb.Categoria.ToString(),
+            Ativo = produtoDb.Ativo
+        };
+
+        private static ProdutoExcluidoEvent GerarProdutoExcluidoEvent(Guid id) => new()
+        {
+            Id = id
+        };
     }
 }

@@ -42,7 +42,16 @@ namespace Api
             services.AddHealthCheckConfig(settings.ConnectionStrings.DefaultConnection);
 
             services.AddControllerDependencyServices();
-            services.AddGatewayDependencyServices(settings.ConnectionStrings.DefaultConnection);
+
+            var sqsQueues = new Queues
+            {
+                QueueProdutoCriadoEvent = settings.AwsSqsSettings.QueueProdutoCriadoEvent,
+                QueueProdutoAtualizadoEvent = settings.AwsSqsSettings.QueueProdutoAtualizadoEvent,
+                QueueProdutoExcluidoEvent = settings.AwsSqsSettings.QueueProdutoExcluidoEvent,
+                QueueClienteCriadoEvent = settings.AwsSqsSettings.QueueClienteCriadoEvent
+            };
+
+            services.AddGatewayDependencyServices(settings.ConnectionStrings.DefaultConnection, sqsQueues);
             services.AddGatewayCognitoDependencyServices(settings.CognitoSettings.ClientId, settings.CognitoSettings.ClientSecret, settings.CognitoSettings.UserPoolId);
         }
 

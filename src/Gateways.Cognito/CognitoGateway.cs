@@ -263,7 +263,8 @@ namespace Gateways.Cognito
             }
 
             var emailAttribute = usuariosComCpf.Attributes.FirstOrDefault(attr => attr.Name == "email");
-            return emailAttribute?.Value;
+
+            return emailAttribute is null ? string.Empty : emailAttribute.Value;
         }
 
         private async Task<List<UserType>> ObterTodosUsuariosCognitoAsync(CancellationToken cancellationToken)
