@@ -1,13 +1,11 @@
-﻿using Core.Infra.MessageBroker;
-using Domain.Entities;
+﻿using Domain.Entities;
 using Gateways.Cognito;
-using Gateways.Dtos.Events;
 using Infra.Dto;
 using Infra.Repositories;
 
 namespace Gateways
 {
-    public class ClienteGateway(IClienteRepository clienteRepository, IFuncionarioRepository funcionarioRepository, ICognitoGateway cognitoGateway, ISqsService<ClienteCriadoEvent> sqsClienteCriado) : IClienteGateway
+    public class ClienteGateway(IClienteRepository clienteRepository, IFuncionarioRepository funcionarioRepository, ICognitoGateway cognitoGateway) : IClienteGateway
     {
         public async Task<bool> CadastrarClienteAsync(Cliente cliente, string senha, CancellationToken cancellationToken)
         {
@@ -22,7 +20,7 @@ namespace Gateways
 
             await clienteRepository.InsertAsync(clienteDto, cancellationToken);
 
-            return await clienteRepository.UnitOfWork.CommitAsync(cancellationToken) && await cognitoGateway.CriarUsuarioClienteAsync(cliente, senha, cancellationToken) && await sqsClienteCriado.SendMessageAsync(GerarClienteCriadoEvent(clienteDto));
+            return await clienteRepository.UnitOfWork.CommitAsync(cancellationToken) && await cognitoGateway.CriarUsuarioClienteAsync(cliente, senha, cancellationToken);
         }
 
         public async Task<bool> AtualizarClienteAsync(Cliente cliente, CancellationToken cancellationToken)
@@ -93,14 +91,5 @@ namespace Gateways
 
             return [];
         }
-
-        private static ClienteCriadoEvent GerarClienteCriadoEvent(ClienteDb clienteDb) => new()
-        {
-            Id = clienteDb.Id,
-            Nome = clienteDb.Nome,
-            Email = clienteDb.Email,
-            Cpf = clienteDb.Cpf,
-            Ativo = clienteDb.Ativo
-        };
     }
 }

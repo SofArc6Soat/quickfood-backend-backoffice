@@ -47,8 +47,7 @@ namespace Api
             {
                 QueueProdutoCriadoEvent = settings.AwsSqsSettings.QueueProdutoCriadoEvent,
                 QueueProdutoAtualizadoEvent = settings.AwsSqsSettings.QueueProdutoAtualizadoEvent,
-                QueueProdutoExcluidoEvent = settings.AwsSqsSettings.QueueProdutoExcluidoEvent,
-                QueueClienteCriadoEvent = settings.AwsSqsSettings.QueueClienteCriadoEvent
+                QueueProdutoExcluidoEvent = settings.AwsSqsSettings.QueueProdutoExcluidoEvent
             };
 
             services.AddGatewayDependencyServices(settings.ConnectionStrings.DefaultConnection, sqsQueues);
