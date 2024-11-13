@@ -8,7 +8,7 @@
 
   <ItemGroup>
     <PackageReference Include="Amazon.Extensions.CognitoAuthentication" Version="2.5.5" />
-    <PackageReference Include="AWSSDK.CognitoIdentityProvider" Version="3.7.403.28" />
+    <PackageReference Include="AWSSDK.CognitoIdentityProvider" Version="3.7.403.30" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="8.0.2" />
   </ItemGroup>
 
