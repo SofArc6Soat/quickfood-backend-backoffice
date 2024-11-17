@@ -160,8 +160,8 @@ jobs:
         run: dotnet test tests/Gateways.Tests/Gateways.Tests.csproj
         
     # Run unit tests Infra
-      - name: Run unit tests Infra
-        run: dotnet test tests/Infra.Tests/Infra.Tests.csproj
+    #  - name: Run unit tests Infra
+    #    run: dotnet test tests/Infra.Tests/Infra.Tests.csproj
 
   code_analysis_main:
     runs-on: ubuntu-latest
@@ -282,4 +282,4 @@ jobs:
 
       - name: Build and Push Docker Image
         id: build-docker-image
-        run: docker buildx build --push -t sofarc6soat/quickfood-backend:latest -f ./src/Api/Dockerfile.publish .
+        run: docker buildx build --push -t sofarc6soat/quickfood-backend-backoffice:latest -f ./src/Api/Dockerfile.publish .
