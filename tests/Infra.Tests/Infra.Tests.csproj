@@ -28,14 +28,11 @@
     <ProjectReference Include="..\..\src\Gateways.Cognito\Gateways.Cognito.csproj" />
     <ProjectReference Include="..\..\src\Gateways\Gateways.csproj" />
     <ProjectReference Include="..\..\src\Infra\Infra.csproj" />
+    <ProjectReference Include="..\Domain.Tests\Domain.Tests.csproj" />
   </ItemGroup>
 
   <ItemGroup>
     <Using Include="Xunit" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Folder Include="Repositories\" />
   </ItemGroup>
 
 </Project>
