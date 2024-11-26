@@ -1,9 +1,10 @@
 ﻿using Core.Domain.Data;
+using Domain.Tests.TestHelpers;
 using Infra.Dto;
 using Infra.Repositories;
 using Moq;
 
-namespace Infra.Tests;
+namespace Infra.Tests.Repositories;
 
 public class ProdutoRepositoryTests
 {
@@ -23,8 +24,8 @@ public class ProdutoRepositoryTests
         // Arrange
         var produtosDb = new List<ProdutoDb>
             {
-                new ProdutoDb { Id = Guid.NewGuid(), Nome = "Produto 1", Descricao = "Descricao 1", Preco = 10.0m, Categoria = "Categoria 1", Ativo = true },
-                new ProdutoDb { Id = Guid.NewGuid(), Nome = "Produto 2", Descricao = "Descricao 2", Preco = 20.0m, Categoria = "Categoria 2", Ativo = true }
+                ProdutoFakeDataFactory.CriarProdutoDbValido(),
+                ProdutoFakeDataFactory.CriarOutroProdutoDbValido()
             };
         var cancellationToken = CancellationToken.None;
 
@@ -59,11 +60,11 @@ public class ProdutoRepositoryTests
     public async Task ObterProdutosCategoriaAsync_DeveRetornarListaDeProdutosDaCategoria()
     {
         // Arrange
-        var categoria = "Categoria 1";
+        var categoria = "Lanche";
         var produtosDb = new List<ProdutoDb>
             {
-                new ProdutoDb { Id = Guid.NewGuid(), Nome = "Produto 1", Descricao = "Descricao 1", Preco = 10.0m, Categoria = categoria, Ativo = true },
-                new ProdutoDb { Id = Guid.NewGuid(), Nome = "Produto 2", Descricao = "Descricao 2", Preco = 20.0m, Categoria = categoria, Ativo = true }
+                ProdutoFakeDataFactory.CriarProdutoDbValido(),
+                ProdutoFakeDataFactory.CriarOutroProdutoDbValido()
             };
         var cancellationToken = CancellationToken.None;
 
@@ -83,7 +84,7 @@ public class ProdutoRepositoryTests
     public async Task ObterProdutosCategoriaAsync_DeveLancarExcecao_QuandoOcorreErro()
     {
         // Arrange
-        var categoria = "Categoria 1";
+        var categoria = "Lanche";
         var cancellationToken = CancellationToken.None;
 
         _mockProdutoRepository.Setup(x => x.ObterProdutosCategoriaAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
@@ -99,8 +100,8 @@ public class ProdutoRepositoryTests
     public async Task FindByIdAsync_DeveRetornarProdutoPorId()
     {
         // Arrange
-        var produtoId = Guid.NewGuid();
-        var produtoDb = new ProdutoDb { Id = produtoId, Nome = "Produto 1", Descricao = "Descricao 1", Preco = 10.0m, Categoria = "Categoria 1", Ativo = true };
+        var produtoId = ProdutoFakeDataFactory.ObterGuid();
+        var produtoDb = ProdutoFakeDataFactory.CriarProdutoDbValido();
         var cancellationToken = CancellationToken.None;
 
         _mockProdutoRepository.Setup(x => x.FindByIdAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
@@ -119,7 +120,7 @@ public class ProdutoRepositoryTests
     public async Task FindByIdAsync_DeveLancarExcecao_QuandoOcorreErro()
     {
         // Arrange
-        var produtoId = Guid.NewGuid();
+        var produtoId = ProdutoFakeDataFactory.ObterGuid();
         var cancellationToken = CancellationToken.None;
 
         _mockProdutoRepository.Setup(x => x.FindByIdAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
@@ -135,7 +136,7 @@ public class ProdutoRepositoryTests
     public async Task InsertAsync_DeveInserirProduto()
     {
         // Arrange
-        var produtoDb = new ProdutoDb { Id = Guid.NewGuid(), Nome = "Produto 1", Descricao = "Descricao 1", Preco = 10.0m, Categoria = "Categoria 1", Ativo = true };
+        var produtoDb = ProdutoFakeDataFactory.CriarProdutoDbValido();
         var cancellationToken = CancellationToken.None;
 
         _mockProdutoRepository.Setup(x => x.InsertAsync(It.IsAny<ProdutoDb>(), It.IsAny<CancellationToken>()))
@@ -152,7 +153,7 @@ public class ProdutoRepositoryTests
     public async Task InsertAsync_DeveLancarExcecao_QuandoOcorreErro()
     {
         // Arrange
-        var produtoDb = new ProdutoDb { Id = Guid.NewGuid(), Nome = "Produto 1", Descricao = "Descricao 1", Preco = 10.0m, Categoria = "Categoria 1", Ativo = true };
+        var produtoDb = ProdutoFakeDataFactory.CriarProdutoDbValido();
         var cancellationToken = CancellationToken.None;
 
         _mockProdutoRepository.Setup(x => x.InsertAsync(It.IsAny<ProdutoDb>(), It.IsAny<CancellationToken>()))
@@ -168,7 +169,7 @@ public class ProdutoRepositoryTests
     public async Task DeleteAsync_DeveDeletarProduto()
     {
         // Arrange
-        var produtoDb = new ProdutoDb { Id = Guid.NewGuid(), Nome = "Produto 1", Descricao = "Descricao 1", Preco = 10.0m, Categoria = "Categoria 1", Ativo = true };
+        var produtoDb = ProdutoFakeDataFactory.CriarProdutoDbValido();
         var cancellationToken = CancellationToken.None;
 
         _mockProdutoRepository.Setup(x => x.DeleteAsync(It.IsAny<ProdutoDb>(), It.IsAny<CancellationToken>()))
@@ -185,7 +186,7 @@ public class ProdutoRepositoryTests
     public async Task DeleteAsync_DeveLancarExcecao_QuandoOcorreErro()
     {
         // Arrange
-        var produtoDb = new ProdutoDb { Id = Guid.NewGuid(), Nome = "Produto 1", Descricao = "Descricao 1", Preco = 10.0m, Categoria = "Categoria 1", Ativo = true };
+        var produtoDb = ProdutoFakeDataFactory.CriarProdutoDbValido();
         var cancellationToken = CancellationToken.None;
 
         _mockProdutoRepository.Setup(x => x.DeleteAsync(It.IsAny<ProdutoDb>(), It.IsAny<CancellationToken>()))

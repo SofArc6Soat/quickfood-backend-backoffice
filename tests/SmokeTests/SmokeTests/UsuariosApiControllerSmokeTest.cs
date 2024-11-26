@@ -1,13 +1,7 @@
-﻿using Gateways.Cognito.Dtos.Request;
-using Gateways.Dtos.Request;
+﻿using Domain.Tests.TestHelpers;
 using Moq;
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Net;
 using System.Net.Http.Json;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace SmokeTests.SmokeTests;
 
@@ -29,11 +23,7 @@ public class UsuariosApiControllerSmokeTest
     public async Task Post_IdentificarClienteCpfEndpoint_ReturnsSuccess()
     {
         // Arrange
-        var request = new ClienteIdentifiqueSeRequestDto
-        {
-            Cpf = "12345678901",
-            Senha = "SenhaTeste123"
-        };
+        var request = UsuarioFakeDataFactory.CriarClienteIdentifiqueSeRequestValido();
 
         // Act
         var response = await _client.PostAsJsonAsync("/usuarios/cliente/identifique-se", request);
@@ -51,14 +41,26 @@ public class UsuariosApiControllerSmokeTest
     }
 
     [Fact]
+    public async Task Post_IdentificarClienteCpfEndpoint_ReturnsBadRequest()
+    {
+        // Arrange
+        var request = UsuarioFakeDataFactory.CriarClienteIdentifiqueSeRequestInvalido();
+        _handlerMock.SetupRequest(HttpMethod.Post, "http://localhost/usuarios/cliente/identifique-se", HttpStatusCode.BadRequest, "{\"Success\":false, \"Errors\":[\"Erro ao identificar cliente\"]}");
+
+        // Act
+        var response = await _client.PostAsJsonAsync("/usuarios/cliente/identifique-se", request);
+
+        // Assert
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+        var content = await response.Content.ReadAsStringAsync();
+        Assert.Contains("Erro ao identificar cliente", content);
+    }
+
+    [Fact]
     public async Task Post_IdentificarFuncionarioEndpoint_ReturnsSuccess()
     {
         // Arrange
-        var request = new FuncinarioIdentifiqueSeRequestDto
-        {
-            Email = "funcionario@teste.com",
-            Senha = "SenhaTeste123"
-        };
+        var request = FuncionarioFakeDataFactory.CriarFuncionarioIdentifiqueSeRequestValido();
 
         // Act
         var response = await _client.PostAsJsonAsync("/usuarios/funcionario/identifique-se", request);
@@ -76,14 +78,26 @@ public class UsuariosApiControllerSmokeTest
     }
 
     [Fact]
+    public async Task Post_IdentificarFuncionarioEndpoint_ReturnsBadRequest()
+    {
+        // Arrange
+        var request = FuncionarioFakeDataFactory.CriarFuncionarioIdentifiqueSeRequestInvalido();
+        _handlerMock.SetupRequest(HttpMethod.Post, "http://localhost/usuarios/funcionario/identifique-se", HttpStatusCode.BadRequest, "{\"Success\":false, \"Errors\":[\"Erro ao identificar funcionário\"]}");
+
+        // Act
+        var response = await _client.PostAsJsonAsync("/usuarios/funcionario/identifique-se", request);
+
+        // Assert
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+        var content = await response.Content.ReadAsStringAsync();
+        Assert.Contains("Erro ao identificar funcionário", content);
+    }
+
+    [Fact]
     public async Task Post_ConfirmarEmailVerificaoEndpoint_ReturnsSuccess()
     {
         // Arrange
-        var request = new ConfirmarEmailVerificacaoDto
-        {
-            Email = "usuario@teste.com",
-            CodigoVerificacao = "123456"
-        };
+        var request = UsuarioFakeDataFactory.CriarConfirmarEmailVerificacaoRequestValido();
 
         // Act
         var response = await _client.PostAsJsonAsync("/usuarios/email-verificacao:confirmar", request);
@@ -101,13 +115,26 @@ public class UsuariosApiControllerSmokeTest
     }
 
     [Fact]
+    public async Task Post_ConfirmarEmailVerificaoEndpoint_ReturnsBadRequest()
+    {
+        // Arrange
+        var request = UsuarioFakeDataFactory.CriarConfirmarEmailVerificacaoRequestInvalido();
+        _handlerMock.SetupRequest(HttpMethod.Post, "http://localhost/usuarios/email-verificacao:confirmar", HttpStatusCode.BadRequest, "{\"Success\":false, \"Errors\":[\"Erro ao confirmar email\"]}");
+
+        // Act
+        var response = await _client.PostAsJsonAsync("/usuarios/email-verificacao:confirmar", request);
+
+        // Assert
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+        var content = await response.Content.ReadAsStringAsync();
+        Assert.Contains("Erro ao confirmar email", content);
+    }
+
+    [Fact]
     public async Task Post_SolicitarRecuperacaoSenhaEndpoint_ReturnsSuccess()
     {
         // Arrange
-        var request = new SolicitarRecuperacaoSenhaDto
-        {
-            Email = "usuario@teste.com"
-        };
+        var request = UsuarioFakeDataFactory.CriarSolicitarRecuperacaoSenhaRequestValido();
 
         // Act
         var response = await _client.PostAsJsonAsync("/usuarios/esquecia-senha:solicitar", request);
@@ -125,15 +152,26 @@ public class UsuariosApiControllerSmokeTest
     }
 
     [Fact]
+    public async Task Post_SolicitarRecuperacaoSenhaEndpoint_ReturnsBadRequest()
+    {
+        // Arrange
+        var request = UsuarioFakeDataFactory.CriarSolicitarRecuperacaoSenhaRequestInvalido();
+        _handlerMock.SetupRequest(HttpMethod.Post, "http://localhost/usuarios/esquecia-senha:solicitar", HttpStatusCode.BadRequest, "{\"Success\":false, \"Errors\":[\"Erro ao solicitar recuperação de senha\"]}");
+
+        // Act
+        var response = await _client.PostAsJsonAsync("/usuarios/esquecia-senha:solicitar", request);
+
+        // Assert
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+        var content = await response.Content.ReadAsStringAsync();
+        Assert.Contains("Erro ao solicitar recuperação de senha", content);
+    }
+
+    [Fact]
     public async Task Post_EfetuarResetSenhaEndpoint_ReturnsSuccess()
     {
         // Arrange
-        var request = new ResetarSenhaDto
-        {
-            Email = "usuario@teste.com",
-            CodigoVerificacao = "123456",
-            NovaSenha = "NovaSenhaTeste123"
-        };
+        var request = UsuarioFakeDataFactory.CriarResetarSenhaRequestValido();
 
         // Act
         var response = await _client.PostAsJsonAsync("/usuarios/esquecia-senha:resetar", request);
@@ -148,5 +186,21 @@ public class UsuariosApiControllerSmokeTest
         response.EnsureSuccessStatusCode();
         Assert.NotNull(response.Content.Headers.ContentType);
         Assert.Equal("application/json; charset=utf-8", response.Content.Headers.ContentType.ToString());
+    }
+
+    [Fact]
+    public async Task Post_EfetuarResetSenhaEndpoint_ReturnsBadRequest()
+    {
+        // Arrange
+        var request = UsuarioFakeDataFactory.CriarResetarSenhaRequestInvalido();
+        _handlerMock.SetupRequest(HttpMethod.Post, "http://localhost/usuarios/esquecia-senha:resetar", HttpStatusCode.BadRequest, "{\"Success\":false, \"Errors\":[\"Erro ao resetar senha\"]}");
+
+        // Act
+        var response = await _client.PostAsJsonAsync("/usuarios/esquecia-senha:resetar", request);
+
+        // Assert
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+        var content = await response.Content.ReadAsStringAsync();
+        Assert.Contains("Erro ao resetar senha", content);
     }
 }

@@ -6,7 +6,7 @@ using Infra.Repositories;
 using Moq;
 using System.Linq.Expressions;
 
-namespace Gateways.Tests;
+namespace Gateways.Tests.Gateways;
 
 public class ProdutoGatewayTests
 {
