@@ -1,4 +1,4 @@
-﻿using Gateways.Dtos.Request;
+﻿using Domain.Tests.TestHelpers;
 using Moq;
 using System.Net;
 using System.Net.Http.Json;
@@ -23,14 +23,7 @@ public class FuncionariosApiControllerSmokeTest
     public async Task Post_CadastrarFuncionarioEndpoint_ReturnsSuccess()
     {
         // Arrange
-        var request = new FuncionarioRequestDto
-        {
-            Id = Guid.NewGuid(),
-            Nome = "Funcionario Teste",
-            Email = "funcionario@teste.com",
-            Senha = "SenhaTeste123",
-            Ativo = true
-        };
+        var request = FuncionarioFakeDataFactory.CriarFuncionarioIdentifiqueSeRequestValido();
 
         // Act
         var response = await _client.PostAsJsonAsync("/funcionarios", request);
@@ -45,5 +38,21 @@ public class FuncionariosApiControllerSmokeTest
         response.EnsureSuccessStatusCode();
         Assert.NotNull(response.Content.Headers.ContentType);
         Assert.Equal("application/json; charset=utf-8", response.Content.Headers.ContentType.ToString());
+    }
+
+    [Fact]
+    public async Task Post_CadastrarFuncionarioEndpoint_ReturnsBadRequest()
+    {
+        // Arrange
+        var request = FuncionarioFakeDataFactory.CriarFuncionarioIdentifiqueSeRequestInvalido();
+        _handlerMock.SetupRequest(HttpMethod.Post, "http://localhost/funcionarios", HttpStatusCode.BadRequest, "{\"Success\":false, \"Errors\":[\"Erro ao cadastrar funcionário\"]}");
+
+        // Act
+        var response = await _client.PostAsJsonAsync("/funcionarios", request);
+
+        // Assert
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+        var content = await response.Content.ReadAsStringAsync();
+        Assert.Contains("Erro ao cadastrar funcionário", content);
     }
 }
