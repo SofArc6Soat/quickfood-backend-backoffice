@@ -25,14 +25,14 @@ namespace Gateways
         public bool VerificarFuncionarioExistente(Guid id, string? email, CancellationToken cancellationToken)
         {
             var funcionarioExistente = funcionarioRepository.Find(e => e.Id == id || e.Email == email, cancellationToken)
-                                                     .FirstOrDefault(g => g.Id == id);
+                                                     .FirstOrDefault();
 
             if (funcionarioExistente is not null)
             {
                 var clienteExistente = clienteRepository.Find(e => e.Email == funcionarioExistente.Email, cancellationToken)
-                                                    .FirstOrDefault(g => g.Id == id);
+                                                    .FirstOrDefault();
 
-                return funcionarioExistente is not null && clienteExistente is null;
+                return clienteExistente is null;
             }
 
             return false;

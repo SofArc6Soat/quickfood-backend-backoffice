@@ -4,12 +4,7 @@ using Gateways.Cognito;
 using Infra.Dto;
 using Infra.Repositories;
 using Moq;
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Linq.Expressions;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Gateways.Tests.Gateways;
 
@@ -148,6 +143,6 @@ public class FuncionarioGatewayTests
         // Assert
         Assert.False(result);
         _mockFuncionarioRepository.Verify(x => x.Find(It.IsAny<Expression<Func<FuncionarioDb, bool>>>(), It.IsAny<CancellationToken>()), Times.Once);
-        _mockClienteRepository.Verify(x => x.Find(It.IsAny<Expression<Func<ClienteDb, bool>>>(), It.IsAny<CancellationToken>()), Times.Once);
+        _mockClienteRepository.Verify(x => x.Find(It.IsAny<Expression<Func<ClienteDb, bool>>>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 }
