@@ -126,7 +126,7 @@ jobs:
 
       # Run smoke tests
       - name: Run smoke tests
-        run: dotnet test quickfood-backend-backoffice/tests/SmokeTests/SmokeTests.csproj --configuration Release
+        run: dotnet test tests/SmokeTests/SmokeTests.csproj
 
   publish_docker_image:
     if: github.ref == 'refs/heads/main'
