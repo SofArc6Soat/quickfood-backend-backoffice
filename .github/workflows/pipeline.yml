@@ -42,8 +42,12 @@ jobs:
         with:
           dotnet-version: '8.0.x'
 
-      # Cache SonarCloud packages 
-      - name: Cache SonarCloud packages 
+      # Restore dependencies
+      - name: Restore dependencies
+        run: dotnet restore src/Api/Api.csproj
+
+      # Cache SonarCloud packages
+      - name: Cache SonarCloud packages
         uses: actions/cache@v3
         with:
           path: ~/.sonar/cache
@@ -59,45 +63,41 @@ jobs:
           key: ${{ runner.os }}-sonar-scanner
           restore-keys: ${{ runner.os }}-sonar-scanner
 
-      # Install SonarCloud scanner if not cached
+      # Install SonarCloud scanner
       - name: Install SonarCloud scanner
         if: steps.cache-sonar-scanner.outputs.cache-hit != 'true'
         run: |
           dotnet tool install --global dotnet-sonarscanner
           echo "{DOTNET_ROOT}/tools" >> $GITHUB_PATH
 
-      # Run SonarCloud analysis
-      - name: Run SonarCloud analysis
+      # Install ReportGenerator
+      - name: Install ReportGenerator
+        run: dotnet tool install --global dotnet-reportgenerator-globaltool
+
+      # Configuração para o SonarScanner
+      - name: Build and analyze with SonarCloud
         env:
           GITHUB_TOKEN: ${{ secrets.REPO_TOKEN_GIT }}
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         run: |
-          # Initialize SonarCloud Scanner
-          dotnet sonarscanner begin \
+          dotnet-sonarscanner begin \
             /k:"SofArc6Soat_quickfood-backend-backoffice" \
             /o:"sofarc6soat" \
             /d:sonar.login="${{ secrets.SONAR_TOKEN }}" \
             /d:sonar.host.url="https://sonarcloud.io" \
             /d:sonar.verbose=true \
-            /d:sonar.cs.vscoveragexml.reportsPaths=coverage.xml
+            /d:sonar.cs.vstest.reportsPaths="**/TestResults/*.trx" \
+            /d:sonar.cs.opencover.reportsPaths="**/TestResults/coverage.cobertura.xml"
 
-          # Build the solution
-          dotnet build QuickFood-Backoffice.sln --configuration Release --no-incremental
+          dotnet build QuickFood-Backoffice.sln --configuration Release
+          dotnet test QuickFood-Backoffice.sln --configuration Release --collect:"XPlat Code Coverage"
 
-          # Run tests and collect code coverage
-          dotnet test QuickFood-Backoffice.sln \
-            --configuration Release \
-            --collect:"XPlat Code Coverage" \
-            --results-directory ./TestResults
+          reportgenerator -reports:**/TestResults/coverage.cobertura.xml \
+                          -targetdir:coverage-report \
+                          -reporttypes:Html
 
-          # Convert coverage to XML if necessary
-          reportgenerator \
-            -reports:TestResults/**/coverage.cobertura.xml \
-            -targetdir:coverage \
-            -reporttypes:Xml
+          dotnet-sonarscanner end /d:sonar.login="${{ secrets.SONAR_TOKEN }}"
 
-          # Finalize SonarCloud Scanner
-          dotnet sonarscanner end /d:sonar.login="${{ secrets.SONAR_TOKEN }}"
 
   deploy:
     runs-on: ubuntu-latest
