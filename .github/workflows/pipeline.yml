@@ -27,8 +27,8 @@ jobs:
         run: dotnet restore src/Api/Api.csproj
 
       # Run unit tests
-      - name: Run unit tests
-        run: dotnet test tests/Domain.Tests/Domain.Tests.csproj
+      - name: Run all unit tests
+        run: dotnet test Tests --configuration Release --collect:"XPlat Code Coverage"
 
   code_analysis:
     runs-on: ubuntu-latest
@@ -75,7 +75,7 @@ jobs:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         run: |
           dotnet-sonarscanner begin /k:"SofArc6Soat_quickfood-backend-backoffice" /o:"sofarc6soat" /d:sonar.login="${{ secrets.SONAR_TOKEN }}" /d:sonar.host.url="https://sonarcloud.io"
-          dotnet test /p:CollectCoverage=true /p:CoverletOutputFormat=opencover -l trx
+          dotnet test Tests --configuration Release --collect:"XPlat Code Coverage" /p:CoverletOutputFormat=opencover
           dotnet-sonarscanner end /d:sonar.login="${{ secrets.SONAR_TOKEN }}"
 
   deploy:
@@ -114,7 +114,7 @@ jobs:
 
       # Run smoke tests
       - name: Run smoke tests
-        run: dotnet test tests/SmokeTests/SmokeTests.csproj
+        run: dotnet test Tests/SmokeTests/SmokeTests.csproj
 
   publish_docker_image:
     if: github.ref == 'refs/heads/main'
