@@ -27,8 +27,9 @@ jobs:
         run: dotnet restore src/Api/Api.csproj
 
       # Run unit tests
-      - name: Run unit tests
-        run: dotnet test tests/Domain.Tests/Domain.Tests.csproj
+      - name: Run all tests
+        run: dotnet test QuickFood-Backoffice.sln --configuration Release --collect:"XPlat Code Coverage"
+
 
   code_analysis:
     runs-on: ubuntu-latest
@@ -42,27 +43,50 @@ jobs:
         with:
           dotnet-version: '8.0.x'
 
-      # Cache SonarCloud
-      - name: Cache SonarCloud packages
+      # Restore dependencies
+      - name: Restore dependencies
+        run: dotnet restore src/Api/Api.csproj
+
+      # Cache SonarCloud packages 
+      - name: Cache SonarCloud packages 
         uses: actions/cache@v3
         with:
           path: ~/.sonar/cache
           key: ${{ runner.os }}-sonar
           restore-keys: ${{ runner.os }}-sonar
 
+      # Cache SonarCloud scanner
+      - name: Cache SonarCloud scanner
+        id: cache-sonar-scanner
+        uses: actions/cache@v3
+        with:
+          path: ~/.sonar/scanner
+          key: ${{ runner.os }}-sonar-scanner
+          restore-keys: ${{ runner.os }}-sonar-scanner
+
       - name: Install SonarCloud scanner
+        if: steps.cache-sonar-scanner.outputs.cache-hit != 'true'
         run: |
           dotnet tool install --global dotnet-sonarscanner
           echo "{DOTNET_ROOT}/tools" >> $GITHUB_PATH
 
-      - name: Build and analyze
+      # Configuração para o SonarScanner
+      - name: Build and analyze with SonarCloud
         env:
           GITHUB_TOKEN: ${{ secrets.REPO_TOKEN_GIT }}
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         run: |
-          dotnet-sonarscanner begin /k:"SofArc6Soat_quickfood-backend-backoffice" /o:"sofarc6soat" /d:sonar.login="${{ secrets.SONAR_TOKEN }}" /d:sonar.host.url="https://sonarcloud.io"
-          dotnet build --configuration Release
-          dotnet test --configuration Release --collect:"XPlat Code Coverage" /p:CoverletOutputFormat=opencover
+          dotnet-sonarscanner begin \
+            /k:"SofArc6Soat_quickfood-backend-backoffice" \
+            /o:"sofarc6soat" \
+            /d:sonar.login="${{ secrets.SONAR_TOKEN }}" \
+            /d:sonar.host.url="https://sonarcloud.io" \
+            /d:sonar.verbose=true
+
+          # Compile e execute os testes usando a solução
+          dotnet build QuickFood-Backoffice.sln --configuration Release
+          dotnet test QuickFood-Backoffice.sln --configuration Release --collect:"XPlat Code Coverage"
+
           dotnet-sonarscanner end /d:sonar.login="${{ secrets.SONAR_TOKEN }}"
 
 
