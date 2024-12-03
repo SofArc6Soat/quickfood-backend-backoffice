@@ -6,20 +6,29 @@ using Gateways.Cognito.Dtos.Response;
 
 namespace UseCases
 {
-    public class UsuarioUseCase(ICognitoGateway cognitoGateway, INotificador notificador) : BaseUseCase(notificador), IUsuarioUseCase
+    public class UsuarioUseCase : BaseUseCase, IUsuarioUseCase
     {
+        private readonly ICognitoGateway _cognitoGateway;
+        private readonly Func<object, bool> _validacao;
+
+        public UsuarioUseCase(ICognitoGateway cognitoGateway, INotificador notificador, Func<object, bool> validacao)
+            : base(notificador)
+        {
+            _cognitoGateway = cognitoGateway;
+            _validacao = validacao;
+        }
+
         public async Task<TokenUsuario?> IdentificarFuncionarioAsync(string email, string senha, CancellationToken cancellationToken) =>
-            await cognitoGateway.IdentifiqueSeAsync(email, null, senha, cancellationToken);
+            await _cognitoGateway.IdentifiqueSeAsync(email, null, senha, cancellationToken);
 
         public async Task<TokenUsuario?> IdentificarClienteCpfAsync(string cpf, string senha, CancellationToken cancellationToken) =>
-            await cognitoGateway.IdentifiqueSeAsync(null, cpf, senha, cancellationToken);
+            await _cognitoGateway.IdentifiqueSeAsync(null, cpf, senha, cancellationToken);
 
         public async Task<bool> ConfirmarEmailVerificacaoAsync(EmailVerificacao emailVerificacao, CancellationToken cancellationToken)
         {
             ArgumentNullException.ThrowIfNull(emailVerificacao);
 
-            if (ExecutarValidacao(new ValidarEmailVerificacao(), emailVerificacao)
-                   && await cognitoGateway.ConfirmarEmailVerificacaoAsync(emailVerificacao, cancellationToken))
+            if (_validacao(emailVerificacao) && await _cognitoGateway.ConfirmarEmailVerificacaoAsync(emailVerificacao, cancellationToken))
             {
                 return true;
             }
@@ -32,8 +41,7 @@ namespace UseCases
         {
             ArgumentNullException.ThrowIfNull(recuperacaoSenha);
 
-            if (ExecutarValidacao(new ValidarSolicitacaoRecuperacaoSenha(), recuperacaoSenha)
-                   && await cognitoGateway.SolicitarRecuperacaoSenhaAsync(recuperacaoSenha, cancellationToken))
+            if (_validacao(recuperacaoSenha) && await _cognitoGateway.SolicitarRecuperacaoSenhaAsync(recuperacaoSenha, cancellationToken))
             {
                 return true;
             }
@@ -46,8 +54,7 @@ namespace UseCases
         {
             ArgumentNullException.ThrowIfNull(resetSenha);
 
-            if (ExecutarValidacao(new ValidarResetSenha(), resetSenha)
-                   && await cognitoGateway.EfetuarResetSenhaAsync(resetSenha, cancellationToken))
+            if (_validacao(resetSenha) && await _cognitoGateway.EfetuarResetSenhaAsync(resetSenha, cancellationToken))
             {
                 return true;
             }

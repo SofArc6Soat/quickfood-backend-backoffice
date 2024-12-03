@@ -23,7 +23,7 @@ namespace Api.Controllers
 
             usuarioRequestDto.Senha = "*******";
 
-            return CustomResponsePost($"funcionarios/{usuarioRequestDto.Id}", usuarioRequestDto, result);
+            return CustomResponsePost($"funcionarios/{usuarioRequestDto.Id}", result, result);
         }
     }
 }
