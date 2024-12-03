@@ -35,11 +35,11 @@ jobs:
     needs: unit_test
     steps:
       # 1. Checkout do código
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       # 2. Configuração do .NET SDK
       - name: Setup .NET Core SDK
-        uses: actions/setup-dotnet@v3
+        uses: actions/setup-dotnet@v4
         with:
           dotnet-version: '8.0.x'
 
@@ -49,7 +49,7 @@ jobs:
 
       # 4. Cache do SonarCloud
       - name: Cache SonarCloud packages
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: ~/.sonar/cache
           key: ${{ runner.os }}-sonar
@@ -58,7 +58,7 @@ jobs:
       # 5. Cache do SonarCloud Scanner
       - name: Cache SonarCloud scanner
         id: cache-sonar-scanner
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: ~/.sonar/scanner
           key: ${{ runner.os }}-sonar-scanner
@@ -105,7 +105,6 @@ jobs:
         with:
           name: code-coverage-report
           path: coverage-report
-
 
   deploy:
     runs-on: ubuntu-latest
