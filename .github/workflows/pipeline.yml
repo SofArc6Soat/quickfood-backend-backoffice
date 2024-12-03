@@ -27,8 +27,9 @@ jobs:
         run: dotnet restore src/Api/Api.csproj
 
       # Run unit tests
-      - name: Run all unit tests
-        run: dotnet test Tests --configuration Release --collect:"XPlat Code Coverage"
+      - name: Run all tests
+        run: dotnet test QuickFood-Backoffice.sln --configuration Release --collect:"XPlat Code Coverage"
+
 
   code_analysis:
     runs-on: ubuntu-latest
