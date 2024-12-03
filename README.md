@@ -166,7 +166,7 @@ Para visualizar a demonstração da aplicação da Fase 2 acesse o seguinte link
  ## Relatório de Cobertura
 Para visualizar o relatório de cobertura de código, abra o arquivo [index.html](src\DevOps\coverageReport\index.html) localizado no diretório `coverage`.
  ```
- coverage/index.html
+ src\DevOps\coverageReport\index.html
  ```
 
 ## Autores
