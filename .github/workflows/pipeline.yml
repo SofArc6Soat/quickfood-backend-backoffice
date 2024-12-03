@@ -208,7 +208,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.REPO_TOKEN_GIT }}
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         run: |
-          dotnet-sonarscanner begin /k:"quickfood-backend-backoffice" /o:"sofarc6soat" /d:sonar.login="${{ secrets.SONAR_TOKEN }}" /d:sonar.host.url="https://sonarcloud.io" /d:sonar.cs.opencover.reportsPaths="**/coverage.opencover.xml"
+          dotnet-sonarscanner begin /k:"SofArc6Soat_quickfood-backend-backoffice" /o:"sofarc6soat" /d:sonar.login="${{ secrets.SONAR_TOKEN }}" /d:sonar.host.url="https://sonarcloud.io" /d:sonar.cs.opencover.reportsPaths="**/coverage.opencover.xml"
           dotnet build src/Api/Api.csproj --configuration Release
           dotnet test src/Api/Api.csproj --configuration Release --collect:"XPlat Code Coverage" /p:CoverletOutputFormat=opencover
           dotnet-sonarscanner end /d:sonar.login="${{ secrets.SONAR_TOKEN }}"
