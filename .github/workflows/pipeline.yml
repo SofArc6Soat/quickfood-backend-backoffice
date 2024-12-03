@@ -34,29 +34,29 @@ jobs:
     runs-on: ubuntu-latest
     needs: unit_test
     steps:
-      # Fazer checkout do código
+      # 1. Checkout do código
       - uses: actions/checkout@v3
 
-      # Configurar .NET Core SDK
+      # 2. Configuração do .NET SDK
       - name: Setup .NET Core SDK
         uses: actions/setup-dotnet@v3
         with:
           dotnet-version: '8.0.x'
 
-      # Restaurar dependências
-      - name: Restore Dependencies
+      # 3. Restauração das dependências
+      - name: Restore dependencies
         run: dotnet restore src/Api/Api.csproj
 
-      # Cache para pacotes do SonarCloud
-      - name: Cache SonarCloud Packages
+      # 4. Cache do SonarCloud
+      - name: Cache SonarCloud packages
         uses: actions/cache@v3
         with:
           path: ~/.sonar/cache
           key: ${{ runner.os }}-sonar
           restore-keys: ${{ runner.os }}-sonar
 
-      # Cache para o scanner do SonarCloud
-      - name: Cache SonarCloud Scanner
+      # 5. Cache do SonarCloud Scanner
+      - name: Cache SonarCloud scanner
         id: cache-sonar-scanner
         uses: actions/cache@v3
         with:
@@ -64,62 +64,47 @@ jobs:
           key: ${{ runner.os }}-sonar-scanner
           restore-keys: ${{ runner.os }}-sonar-scanner
 
-      # Instalar o SonarCloud Scanner
-      - name: Install SonarCloud Scanner
+      # 6. Instalação do SonarCloud Scanner
+      - name: Install SonarCloud scanner
         if: steps.cache-sonar-scanner.outputs.cache-hit != 'true'
         run: |
           dotnet tool install --global dotnet-sonarscanner
-          echo "${DOTNET_ROOT}/tools" >> $GITHUB_PATH
+          echo "{DOTNET_ROOT}/tools" >> $GITHUB_PATH
 
-      # Instalar ReportGenerator
+      # 7. Instalação do ReportGenerator
       - name: Install ReportGenerator
         run: dotnet tool install --global dotnet-reportgenerator-globaltool
 
-      # Executar análise com o SonarCloud
-      - name: Build and Analyze with SonarCloud
+      # 8. Configuração e análise com o SonarScanner
+      - name: Build and analyze with SonarCloud
         env:
           GITHUB_TOKEN: ${{ secrets.REPO_TOKEN_GIT }}
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         run: |
-          # Etapa de inicialização do scanner
           dotnet-sonarscanner begin \
             /k:"SofArc6Soat_quickfood-backend-backoffice" \
             /o:"sofarc6soat" \
             /d:sonar.login="${{ secrets.SONAR_TOKEN }}" \
             /d:sonar.host.url="https://sonarcloud.io" \
             /d:sonar.verbose=true \
-            /d:sonar.cs.vstest.reportsPaths="**/TestResults/*.trx" \
-            /d:sonar.cs.opencover.reportsPaths="**/TestResults/coverage.cobertura.xml"
+            /d:sonar.cs.vstest.reportsPaths="tests/**/TestResults/*.trx" \
+            /d:sonar.cs.opencover.reportsPaths="tests/**/TestResults/coverage.cobertura.xml"
 
-          # Construir e testar solução
           dotnet build QuickFood-Backoffice.sln --configuration Release
-          dotnet test QuickFood-Backoffice.sln --configuration Release \
-            --results-directory tests/Api/TestResults \
-            --collect:"XPlat Code Coverage"
+          dotnet test QuickFood-Backoffice.sln --configuration Release --collect:"XPlat Code Coverage"
 
-          # Gerar relatórios de cobertura
-          reportgenerator -reports:tests/**/TestResults/coverage.cobertura.xml \
+          reportgenerator -reports:tests/**/TestResults/*.coverage.cobertura.xml \
                           -targetdir:coverage-report \
                           -reporttypes:Html
 
-          # Encerrar análise do scanner
           dotnet-sonarscanner end /d:sonar.login="${{ secrets.SONAR_TOKEN }}"
 
-      # Fazer upload dos relatórios como artefato
+      # 9. Upload do relatório de cobertura
       - name: Upload Coverage Report
         uses: actions/upload-artifact@v3
         with:
-          name: coverage-report
+          name: code-coverage-report
           path: coverage-report
-
-      # Fazer upload dos resultados de testes como artefato
-      - name: Upload Test Results
-        uses: actions/upload-artifact@v3
-        with:
-          name: TestResults
-          path: tests/**/TestResults
-
-
 
   deploy:
     runs-on: ubuntu-latest
