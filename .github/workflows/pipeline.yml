@@ -42,15 +42,29 @@ jobs:
         with:
           dotnet-version: '8.0.x'
 
-      # Cache SonarCloud
-      - name: Cache SonarCloud packages
+      # Restore dependencies
+      - name: Restore dependencies
+        run: dotnet restore src/Api/Api.csproj
+
+      # Cache SonarCloud packages 
+      - name: Cache SonarCloud packages 
         uses: actions/cache@v3
         with:
           path: ~/.sonar/cache
           key: ${{ runner.os }}-sonar
           restore-keys: ${{ runner.os }}-sonar
 
+      # Cache SonarCloud scanner
+      - name: Cache SonarCloud scanner
+        id: cache-sonar-scanner
+        uses: actions/cache@v3
+        with:
+          path: ~/.sonar/scanner
+          key: ${{ runner.os }}-sonar-scanner
+          restore-keys: ${{ runner.os }}-sonar-scanner
+
       - name: Install SonarCloud scanner
+        if: steps.cache-sonar-scanner.outputs.cache-hit != 'true'
         run: |
           dotnet tool install --global dotnet-sonarscanner
           echo "{DOTNET_ROOT}/tools" >> $GITHUB_PATH
@@ -61,10 +75,8 @@ jobs:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         run: |
           dotnet-sonarscanner begin /k:"SofArc6Soat_quickfood-backend-backoffice" /o:"sofarc6soat" /d:sonar.login="${{ secrets.SONAR_TOKEN }}" /d:sonar.host.url="https://sonarcloud.io"
-          dotnet build --configuration Release
-          dotnet test --configuration Release --collect:"XPlat Code Coverage" /p:CoverletOutputFormat=opencover
+          dotnet test /p:CollectCoverage=true /p:CoverletOutputFormat=opencover -l trx
           dotnet-sonarscanner end /d:sonar.login="${{ secrets.SONAR_TOKEN }}"
-
 
   deploy:
     runs-on: ubuntu-latest
