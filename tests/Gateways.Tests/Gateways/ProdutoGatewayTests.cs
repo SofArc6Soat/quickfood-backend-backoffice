@@ -1,5 +1,6 @@
 ﻿using Core.Infra.MessageBroker;
 using Domain.Tests.TestHelpers;
+using Domain.ValueObjects;
 using Gateways.Dtos.Events;
 using Infra.Dto;
 using Infra.Repositories;
@@ -219,5 +220,158 @@ public class ProdutoGatewayTests
         Assert.False(result, "O método VerificarProdutoExistente deveria retornar false quando o produto não existe.");
 
         _produtoRepositoryMock.Verify(x => x.Find(It.IsAny<Expression<Func<ProdutoDb, bool>>>(), It.IsAny<CancellationToken>()), Times.Once);
+    }
+    [Fact]
+    public async Task VerificarProdutoExistenteAsync_DeveRetornarTrue_QuandoProdutoExistente()
+    {
+        // Arrange
+        var produtoDb = ProdutoFakeDataFactory.CriarProdutoDbValido();
+
+        _produtoRepositoryMock
+            .Setup(x => x.FindByIdAsync(produtoDb.Id, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(produtoDb);
+
+        // Act
+        var result = await _produtoGateway.VerificarProdutoExistenteAsync(produtoDb.Id, CancellationToken.None);
+
+        // Assert
+        Assert.True(result);
+
+        _produtoRepositoryMock.Verify(x => x.FindByIdAsync(produtoDb.Id, It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task VerificarProdutoExistenteAsync_DeveRetornarFalse_QuandoProdutoNaoExistente()
+    {
+        // Arrange
+        var produtoId = ProdutoFakeDataFactory.ObterGuid();
+
+        _produtoRepositoryMock
+            .Setup(x => x.FindByIdAsync(produtoId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync((ProdutoDb?)null);
+
+        // Act
+        var result = await _produtoGateway.VerificarProdutoExistenteAsync(produtoId, CancellationToken.None);
+
+        // Assert
+        Assert.False(result);
+
+        _produtoRepositoryMock.Verify(x => x.FindByIdAsync(produtoId, It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task ObterProdutoAsync_DeveRetornarProduto_QuandoProdutoExistente()
+    {
+        // Arrange
+        var produtoDb = ProdutoFakeDataFactory.CriarProdutoDbValido();
+
+        _produtoRepositoryMock
+            .Setup(x => x.FindByIdAsync(produtoDb.Id, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(produtoDb);
+
+        // Act
+        var result = await _produtoGateway.ObterProdutoAsync(produtoDb.Id, CancellationToken.None);
+
+        // Assert
+        Assert.NotNull(result);
+        Assert.Equal(produtoDb.Id, result?.Id);
+
+        _produtoRepositoryMock.Verify(x => x.FindByIdAsync(produtoDb.Id, It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task ObterProdutoAsync_DeveRetornarNull_QuandoProdutoNaoExistente()
+    {
+        // Arrange
+        var produtoId = ProdutoFakeDataFactory.ObterGuid();
+
+        _produtoRepositoryMock
+            .Setup(x => x.FindByIdAsync(produtoId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync((ProdutoDb?)null);
+
+        // Act
+        var result = await _produtoGateway.ObterProdutoAsync(produtoId, CancellationToken.None);
+
+        // Assert
+        Assert.Null(result);
+
+        _produtoRepositoryMock.Verify(x => x.FindByIdAsync(produtoId, It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task ObterTodosProdutosAsync_DeveRetornarListaDeProdutos_QuandoProdutosExistem()
+    {
+        // Arrange
+        var produtosDb = ProdutoFakeDataFactory.CriarListaProdutosDbValidos();
+
+        _produtoRepositoryMock
+            .Setup(x => x.ObterTodosProdutosAsync(It.IsAny<CancellationToken>()))
+            .ReturnsAsync(produtosDb);
+
+        // Act
+        var result = await _produtoGateway.ObterTodosProdutosAsync(CancellationToken.None);
+
+        // Assert
+        Assert.NotEmpty(result);
+        Assert.Equal(produtosDb.Count(), result.Count());
+
+        _produtoRepositoryMock.Verify(x => x.ObterTodosProdutosAsync(It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task ObterTodosProdutosAsync_DeveRetornarListaVazia_QuandoNenhumProdutoExistir()
+    {
+        // Arrange
+        _produtoRepositoryMock
+            .Setup(x => x.ObterTodosProdutosAsync(It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new List<ProdutoDb>());
+
+        // Act
+        var result = await _produtoGateway.ObterTodosProdutosAsync(CancellationToken.None);
+
+        // Assert
+        Assert.Empty(result);
+
+        _produtoRepositoryMock.Verify(x => x.ObterTodosProdutosAsync(It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task ObterProdutosCategoriaAsync_DeveRetornarListaDeProdutos_QuandoProdutosExistemNaCategoria()
+    {
+        // Arrange
+        var categoria = Categoria.Lanche;
+        var produtosDb = ProdutoFakeDataFactory.CriarListaProdutosDbValidos();
+
+        _produtoRepositoryMock
+            .Setup(x => x.ObterProdutosCategoriaAsync(categoria.ToString(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(produtosDb);
+
+        // Act
+        var result = await _produtoGateway.ObterProdutosCategoriaAsync(categoria, CancellationToken.None);
+
+        // Assert
+        Assert.NotEmpty(result);
+        Assert.Equal(produtosDb.Count(), result.Count());
+
+        _produtoRepositoryMock.Verify(x => x.ObterProdutosCategoriaAsync(categoria.ToString(), It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task ObterProdutosCategoriaAsync_DeveRetornarListaVazia_QuandoNenhumProdutoExistirNaCategoria()
+    {
+        // Arrange
+        var categoria = Categoria.Lanche;
+
+        _produtoRepositoryMock
+            .Setup(x => x.ObterProdutosCategoriaAsync(categoria.ToString(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new List<ProdutoDb>());
+
+        // Act
+        var result = await _produtoGateway.ObterProdutosCategoriaAsync(categoria, CancellationToken.None);
+
+        // Assert
+        Assert.Empty(result);
+
+        _produtoRepositoryMock.Verify(x => x.ObterProdutosCategoriaAsync(categoria.ToString(), It.IsAny<CancellationToken>()), Times.Once);
     }
 }
