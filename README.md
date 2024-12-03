@@ -163,6 +163,12 @@ Para visualizar o desenho da arquitetura abra o arquivo "Arquitetura.drawio.png"
 ## Demonstração em vídeo
 Para visualizar a demonstração da aplicação da Fase 2 acesse o seguinte link do Vimeo: https://vimeo.com/992479829/d8dba62df1
 
+ ## Relatório de Cobertura
+Para visualizar o relatório de cobertura de código, abra o arquivo [index.html](src\DevOps\coverageReport\index.html) localizado no diretório `coverage`.
+ ```
+ coverage/index.html
+ ```
+
 ## Autores
 
 - **Anderson Lopez de Andrade RM: 350452** <br>
