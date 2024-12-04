@@ -17,7 +17,7 @@ public class UsuarioUseCaseTests
     {
         _cognitoGatewayMock = new Mock<ICognitoGateway>();
         _notificadorMock = new Mock<INotificador>();
-        _usuarioUseCase = new UsuarioUseCase(_cognitoGatewayMock.Object, _notificadorMock.Object, _ => true);
+        _usuarioUseCase = new UsuarioUseCase(_cognitoGatewayMock.Object, _notificadorMock.Object);
     }
 
     [Fact]
