@@ -1,160 +1,137 @@
-﻿using Core.Domain.Data;
-using Domain.Tests.TestHelpers;
+﻿using Domain.Tests.TestHelpers;
+using Infra.Context;
 using Infra.Dto;
 using Infra.Repositories;
-using Moq;
+using Microsoft.EntityFrameworkCore;
 
 namespace Infra.Tests.Repositories;
 
-public class FuncionarioRepositoryTests
+public class FuncionarioRepositoryTests : IDisposable
 {
-    private readonly Mock<IFuncionarioRepository> _mockFuncionarioRepository;
-    private readonly Mock<IUnitOfWork> _mockUnitOfWork;
+    private FuncionarioRepository _funcionarioRepository;
+    private ApplicationDbContext _context;
 
     public FuncionarioRepositoryTests()
     {
-        _mockFuncionarioRepository = new Mock<IFuncionarioRepository>();
-        _mockUnitOfWork = new Mock<IUnitOfWork>();
-        _mockFuncionarioRepository.Setup(repo => repo.UnitOfWork).Returns(_mockUnitOfWork.Object);
+        RecreateContext();
+    }
+
+    private void RecreateContext()
+    {
+        var options = new DbContextOptionsBuilder<ApplicationDbContext>()
+            .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString()) // Garante um banco de dados único para cada teste
+            .Options;
+
+        _context = new ApplicationDbContext(options);
+        _funcionarioRepository = new FuncionarioRepository(_context);
+    }
+
+    private void SeedDatabase()
+    {
+        _context.Database.EnsureDeleted(); // Garantir que o banco de dados seja limpo antes de cada teste
+        _context.Database.EnsureCreated();
+
+        var funcionarios = new List<FuncionarioDb>
+        {
+            FuncionarioFakeDataFactory.CriarFuncionarioDbValido(),
+            FuncionarioFakeDataFactory.CriarOutroFuncionarioDbValido(),
+            FuncionarioFakeDataFactory.CriarFuncionarioDbInvalido()
+        };
+
+        _context.Set<FuncionarioDb>().AddRange(funcionarios);
+        _context.SaveChanges();
     }
 
     [Fact]
-    public async Task ObterTodosFuncionariosAsync_DeveRetornarListaDeFuncionarios()
+    public async Task FindByIdAsync_DeveRetornarFuncionario_QuandoIdExistir()
     {
         // Arrange
-        var funcionariosDb = new List<FuncionarioDb>
-            {
-                FuncionarioFakeDataFactory.CriarFuncionarioDbValido(),
-                FuncionarioFakeDataFactory.CriarOutroFuncionarioDbValido()
-            };
-        var cancellationToken = CancellationToken.None;
-
-        _mockFuncionarioRepository.Setup(x => x.FindAllAsync(It.IsAny<CancellationToken>()))
-            .ReturnsAsync(funcionariosDb);
+        RecreateContext();
+        SeedDatabase();
+        var funcionarioId = _context.Set<FuncionarioDb>().First().Id;
 
         // Act
-        var resultado = await _mockFuncionarioRepository.Object.FindAllAsync(cancellationToken);
+        var result = await _funcionarioRepository.FindByIdAsync(funcionarioId, CancellationToken.None);
 
         // Assert
-        Assert.NotNull(resultado);
-        Assert.Equal(2, resultado.Count);
-        _mockFuncionarioRepository.Verify(x => x.FindAllAsync(It.IsAny<CancellationToken>()), Times.Once);
+        Assert.NotNull(result);
+        Assert.Equal(funcionarioId, result?.Id);
     }
 
     [Fact]
-    public async Task ObterTodosFuncionariosAsync_DeveLancarExcecao_QuandoOcorreErro()
+    public async Task FindByIdAsync_DeveRetornarNull_QuandoIdNaoExistir()
     {
         // Arrange
-        var cancellationToken = CancellationToken.None;
-
-        _mockFuncionarioRepository.Setup(x => x.FindAllAsync(It.IsAny<CancellationToken>()))
-            .ThrowsAsync(new Exception("Erro ao obter todos os funcionários"));
-
-        // Act & Assert
-        var exception = await Assert.ThrowsAsync<Exception>(() => _mockFuncionarioRepository.Object.FindAllAsync(cancellationToken));
-        Assert.Equal("Erro ao obter todos os funcionários", exception.Message);
-        _mockFuncionarioRepository.Verify(x => x.FindAllAsync(It.IsAny<CancellationToken>()), Times.Once);
-    }
-
-    [Fact]
-    public async Task FindByIdAsync_DeveRetornarFuncionarioPorId()
-    {
-        // Arrange
-        var funcionarioId = FuncionarioFakeDataFactory.ObterGuid();
-        var funcionarioDb = FuncionarioFakeDataFactory.CriarFuncionarioDbValido();
-        var cancellationToken = CancellationToken.None;
-
-        _mockFuncionarioRepository.Setup(x => x.FindByIdAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(funcionarioDb);
+        RecreateContext();
+        SeedDatabase();
+        var funcionarioId = Guid.NewGuid();
 
         // Act
-        var resultado = await _mockFuncionarioRepository.Object.FindByIdAsync(funcionarioId, cancellationToken);
+        var result = await _funcionarioRepository.FindByIdAsync(funcionarioId, CancellationToken.None);
 
         // Assert
-        Assert.NotNull(resultado);
-        Assert.Equal(funcionarioId, resultado.Id);
-        _mockFuncionarioRepository.Verify(x => x.FindByIdAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()), Times.Once);
+        Assert.Null(result);
     }
 
     [Fact]
-    public async Task FindByIdAsync_DeveLancarExcecao_QuandoOcorreErro()
+    public async Task InsertAsync_DeveAdicionarNovoFuncionario()
     {
         // Arrange
-        var funcionarioId = FuncionarioFakeDataFactory.ObterGuid();
-        var cancellationToken = CancellationToken.None;
-
-        _mockFuncionarioRepository.Setup(x => x.FindByIdAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
-            .ThrowsAsync(new Exception("Erro ao encontrar funcionário por ID"));
-
-        // Act & Assert
-        var exception = await Assert.ThrowsAsync<Exception>(() => _mockFuncionarioRepository.Object.FindByIdAsync(funcionarioId, cancellationToken));
-        Assert.Equal("Erro ao encontrar funcionário por ID", exception.Message);
-        _mockFuncionarioRepository.Verify(x => x.FindByIdAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()), Times.Once);
-    }
-
-    [Fact]
-    public async Task InsertAsync_DeveInserirFuncionario()
-    {
-        // Arrange
-        var funcionarioDb = FuncionarioFakeDataFactory.CriarFuncionarioDbValido();
-        var cancellationToken = CancellationToken.None;
-
-        _mockFuncionarioRepository.Setup(x => x.InsertAsync(It.IsAny<FuncionarioDb>(), It.IsAny<CancellationToken>()))
-            .Returns(Task.CompletedTask);
+        RecreateContext();
+        SeedDatabase();
+        var novoFuncionario = FuncionarioFakeDataFactory.CriarFuncionarioDbValido();
+        novoFuncionario.Id = Guid.NewGuid(); // Garantir que o ID seja único
 
         // Act
-        await _mockFuncionarioRepository.Object.InsertAsync(funcionarioDb, cancellationToken);
+        await _funcionarioRepository.InsertAsync(novoFuncionario, CancellationToken.None);
+        await _context.SaveChangesAsync(); // Garantir que a inserção seja persistida
+        var result = await _funcionarioRepository.FindByIdAsync(novoFuncionario.Id, CancellationToken.None);
 
         // Assert
-        _mockFuncionarioRepository.Verify(x => x.InsertAsync(It.IsAny<FuncionarioDb>(), It.IsAny<CancellationToken>()), Times.Once);
+        Assert.NotNull(result);
+        Assert.Equal(novoFuncionario.Id, result?.Id);
     }
 
     [Fact]
-    public async Task InsertAsync_DeveLancarExcecao_QuandoOcorreErro()
+    public async Task UpdateAsync_DeveAtualizarFuncionarioExistente()
     {
         // Arrange
-        var funcionarioDb = FuncionarioFakeDataFactory.CriarFuncionarioDbValido();
-        var cancellationToken = CancellationToken.None;
-
-        _mockFuncionarioRepository.Setup(x => x.InsertAsync(It.IsAny<FuncionarioDb>(), It.IsAny<CancellationToken>()))
-            .ThrowsAsync(new Exception("Erro ao inserir funcionário"));
-
-        // Act & Assert
-        var exception = await Assert.ThrowsAsync<Exception>(() => _mockFuncionarioRepository.Object.InsertAsync(funcionarioDb, cancellationToken));
-        Assert.Equal("Erro ao inserir funcionário", exception.Message);
-        _mockFuncionarioRepository.Verify(x => x.InsertAsync(It.IsAny<FuncionarioDb>(), It.IsAny<CancellationToken>()), Times.Once);
-    }
-
-    [Fact]
-    public async Task DeleteAsync_DeveDeletarFuncionario()
-    {
-        // Arrange
-        var funcionarioDb = FuncionarioFakeDataFactory.CriarFuncionarioDbValido();
-        var cancellationToken = CancellationToken.None;
-
-        _mockFuncionarioRepository.Setup(x => x.DeleteAsync(It.IsAny<FuncionarioDb>(), It.IsAny<CancellationToken>()))
-            .Returns(Task.CompletedTask);
+        RecreateContext();
+        SeedDatabase();
+        var funcionarioId = _context.Set<FuncionarioDb>().AsNoTracking().First().Id;
+        var funcionario = await _funcionarioRepository.FindByIdAsync(funcionarioId, CancellationToken.None);
+        funcionario.Nome = "Funcionario Atualizado";
 
         // Act
-        await _mockFuncionarioRepository.Object.DeleteAsync(funcionarioDb, cancellationToken);
+        _context.Entry(funcionario).State = EntityState.Detached; // Desanexar a entidade do contexto
+        _context.Set<FuncionarioDb>().Update(funcionario); // Atualizar a entidade no contexto
+        await _context.SaveChangesAsync(); // Garantir que a atualização seja persistida
+        var result = await _funcionarioRepository.FindByIdAsync(funcionario.Id, CancellationToken.None);
 
         // Assert
-        _mockFuncionarioRepository.Verify(x => x.DeleteAsync(It.IsAny<FuncionarioDb>(), It.IsAny<CancellationToken>()), Times.Once);
+        Assert.NotNull(result);
+        Assert.Equal("Funcionario Atualizado", result?.Nome);
     }
 
     [Fact]
-    public async Task DeleteAsync_DeveLancarExcecao_QuandoOcorreErro()
+    public async Task DeleteAsync_DeveRemoverFuncionarioExistente()
     {
         // Arrange
-        var funcionarioDb = FuncionarioFakeDataFactory.CriarFuncionarioDbValido();
-        var cancellationToken = CancellationToken.None;
+        RecreateContext();
+        SeedDatabase();
+        var funcionario = _context.Set<FuncionarioDb>().First();
 
-        _mockFuncionarioRepository.Setup(x => x.DeleteAsync(It.IsAny<FuncionarioDb>(), It.IsAny<CancellationToken>()))
-            .ThrowsAsync(new Exception("Erro ao deletar funcionário"));
+        // Act
+        await _funcionarioRepository.DeleteAsync(funcionario.Id, CancellationToken.None);
+        await _context.SaveChangesAsync(); // Garantir que a exclusão seja persistida
+        var result = await _funcionarioRepository.FindByIdAsync(funcionario.Id, CancellationToken.None);
 
-        // Act & Assert
-        var exception = await Assert.ThrowsAsync<Exception>(() => _mockFuncionarioRepository.Object.DeleteAsync(funcionarioDb, cancellationToken));
-        Assert.Equal("Erro ao deletar funcionário", exception.Message);
-        _mockFuncionarioRepository.Verify(x => x.DeleteAsync(It.IsAny<FuncionarioDb>(), It.IsAny<CancellationToken>()), Times.Once);
+        // Assert
+        Assert.Null(result);
+    }
+
+    public void Dispose()
+    {
+        _context.Dispose();
     }
 }

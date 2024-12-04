@@ -32,7 +32,7 @@ namespace Api.Controllers
 
             clienteRequestDto.Senha = "*******";
 
-            return CustomResponsePost($"clientes/{clienteRequestDto.Id}", clienteRequestDto, result);
+            return CustomResponsePost($"clientes/{clienteRequestDto.Id}", result, result);
         }
 
         [HttpPut("{id:guid}")]
@@ -50,7 +50,7 @@ namespace Api.Controllers
 
             var result = await clienteController.AtualizarClienteAsync(clienteAtualizarRequestDto, cancellationToken);
 
-            return CustomResponsePutPatch(clienteAtualizarRequestDto, result);
+            return CustomResponsePutPatch(result, result);
         }
 
         [HttpDelete("{id:guid}")]

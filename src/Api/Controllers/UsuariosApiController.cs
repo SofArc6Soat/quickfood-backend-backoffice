@@ -56,7 +56,7 @@ namespace Api.Controllers
 
             var result = await usuarioController.ConfirmarEmailVerificacaoAsync(request, cancellationToken);
 
-            return CustomResponsePost($"usuarios/email-verificacao:confirmar", request, result);
+            return CustomResponsePost($"usuarios/email-verificacao:confirmar", result, result);
         }
 
         [HttpPost("esquecia-senha:solicitar")]
@@ -69,7 +69,7 @@ namespace Api.Controllers
 
             var result = await usuarioController.SolicitarRecuperacaoSenhaAsync(request, cancellationToken);
 
-            return CustomResponsePost($"usuarios/email-verificacao:solicitar", request, result);
+            return CustomResponsePost($"usuarios/esquecia-senha:solicitar", result, result);
         }
 
         [HttpPost("esquecia-senha:resetar")]
@@ -84,7 +84,7 @@ namespace Api.Controllers
 
             request.NovaSenha = "*******";
 
-            return CustomResponsePost($"usuarios/email-verificacao:resetar", request, result);
+            return CustomResponsePost($"usuarios/esquecia-senha:resetar", result, result);
         }
     }
 }

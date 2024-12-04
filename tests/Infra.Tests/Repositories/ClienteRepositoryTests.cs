@@ -1,160 +1,82 @@
-﻿using Core.Domain.Data;
-using Domain.Tests.TestHelpers;
+﻿using Infra.Context;
 using Infra.Dto;
 using Infra.Repositories;
-using Moq;
+using Microsoft.EntityFrameworkCore;
 
 namespace Infra.Tests.Repositories;
 
-public class ClienteRepositoryTests
+public class ClienteRepositoryTests : IDisposable
 {
-    private readonly Mock<IClienteRepository> _mockClienteRepository;
-    private readonly Mock<IUnitOfWork> _mockUnitOfWork;
+    private ClienteRepository _clienteRepository;
+    private ApplicationDbContext _context;
 
     public ClienteRepositoryTests()
     {
-        _mockClienteRepository = new Mock<IClienteRepository>();
-        _mockUnitOfWork = new Mock<IUnitOfWork>();
-        _mockClienteRepository.Setup(repo => repo.UnitOfWork).Returns(_mockUnitOfWork.Object);
+        RecreateContext();
     }
 
-    [Fact]
-    public async Task ObterTodosClientesAsync_DeveRetornarListaDeClientes()
+    private void RecreateContext()
     {
-        // Arrange
-        var clientesDb = new List<ClienteDb>
+        var options = new DbContextOptionsBuilder<ApplicationDbContext>()
+            .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString()) // Garante um banco de dados único para cada teste
+            .Options;
+
+        _context = new ApplicationDbContext(options);
+        _clienteRepository = new ClienteRepository(_context);
+    }
+
+    private void SeedDatabase()
+    {
+        var clientes = new List<ClienteDb>
+        {
+            new ClienteDb
             {
-                ClienteFakeDataFactory.CriarClienteDbValido(),
-                ClienteFakeDataFactory.CriarOutroClienteDbValido()
-            };
-        var cancellationToken = CancellationToken.None;
+                Id = Guid.NewGuid(),
+                Nome = "Cliente 1",
+                Email = "cliente1@example.com",
+                Cpf = "12345678901",
+                Ativo = true
+            },
+            new ClienteDb
+            {
+                Id = Guid.NewGuid(),
+                Nome = "Cliente 2",
+                Email = "cliente2@example.com",
+                Cpf = "23456789012",
+                Ativo = true
+            },
+            new ClienteDb
+            {
+                Id = Guid.NewGuid(),
+                Nome = "Cliente Inativo",
+                Email = "clienteinativo@example.com",
+                Cpf = "34567890123",
+                Ativo = false
+            }
+        };
 
-        _mockClienteRepository.Setup(x => x.FindAllAsync(It.IsAny<CancellationToken>()))
-            .ReturnsAsync(clientesDb);
+        _context.Set<ClienteDb>().AddRange(clientes);
+        _context.SaveChanges();
+    }
+
+    [Fact]
+    public async Task ObterTodosClientesAsync_DeveRetornarApenasClientesAtivos()
+    {
+        // Arrange
+        RecreateContext();
+        SeedDatabase();
 
         // Act
-        var resultado = await _mockClienteRepository.Object.FindAllAsync(cancellationToken);
+        var result = await _clienteRepository.ObterTodosClientesAsync(CancellationToken.None);
 
         // Assert
-        Assert.NotNull(resultado);
-        Assert.Equal(2, resultado.Count);
-        _mockClienteRepository.Verify(x => x.FindAllAsync(It.IsAny<CancellationToken>()), Times.Once);
+        Assert.NotNull(result);
+        Assert.Equal(2, result.Count());
+        Assert.All(result, p => Assert.True(p.Ativo));
     }
 
-    [Fact]
-    public async Task ObterTodosClientesAsync_DeveLancarExcecao_QuandoOcorreErro()
+    public void Dispose()
     {
-        // Arrange
-        var cancellationToken = CancellationToken.None;
-
-        _mockClienteRepository.Setup(x => x.FindAllAsync(It.IsAny<CancellationToken>()))
-            .ThrowsAsync(new Exception("Erro ao obter todos os clientes"));
-
-        // Act & Assert
-        var exception = await Assert.ThrowsAsync<Exception>(() => _mockClienteRepository.Object.FindAllAsync(cancellationToken));
-        Assert.Equal("Erro ao obter todos os clientes", exception.Message);
-        _mockClienteRepository.Verify(x => x.FindAllAsync(It.IsAny<CancellationToken>()), Times.Once);
-    }
-
-    [Fact]
-    public async Task FindByIdAsync_DeveRetornarClientePorId()
-    {
-        // Arrange
-        var clienteId = ClienteFakeDataFactory.CriarClienteDbValido().Id;
-        var clienteDb = ClienteFakeDataFactory.CriarClienteDbValido();
-        var cancellationToken = CancellationToken.None;
-
-        _mockClienteRepository.Setup(x => x.FindByIdAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(clienteDb);
-
-        // Act
-        var resultado = await _mockClienteRepository.Object.FindByIdAsync(clienteId, cancellationToken);
-
-        // Assert
-        Assert.NotNull(resultado);
-        Assert.Equal(clienteId, resultado.Id);
-        _mockClienteRepository.Verify(x => x.FindByIdAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()), Times.Once);
-    }
-
-    [Fact]
-    public async Task FindByIdAsync_DeveLancarExcecao_QuandoOcorreErro()
-    {
-        // Arrange
-        var clienteId = ClienteFakeDataFactory.CriarClienteDbValido().Id;
-        var cancellationToken = CancellationToken.None;
-
-        _mockClienteRepository.Setup(x => x.FindByIdAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
-            .ThrowsAsync(new Exception("Erro ao encontrar cliente por ID"));
-
-        // Act & Assert
-        var exception = await Assert.ThrowsAsync<Exception>(() => _mockClienteRepository.Object.FindByIdAsync(clienteId, cancellationToken));
-        Assert.Equal("Erro ao encontrar cliente por ID", exception.Message);
-        _mockClienteRepository.Verify(x => x.FindByIdAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()), Times.Once);
-    }
-
-    [Fact]
-    public async Task InsertAsync_DeveInserirCliente()
-    {
-        // Arrange
-        var clienteDb = ClienteFakeDataFactory.CriarClienteDbValido();
-        var cancellationToken = CancellationToken.None;
-
-        _mockClienteRepository.Setup(x => x.InsertAsync(It.IsAny<ClienteDb>(), It.IsAny<CancellationToken>()))
-            .Returns(Task.CompletedTask);
-
-        // Act
-        await _mockClienteRepository.Object.InsertAsync(clienteDb, cancellationToken);
-
-        // Assert
-        _mockClienteRepository.Verify(x => x.InsertAsync(It.IsAny<ClienteDb>(), It.IsAny<CancellationToken>()), Times.Once);
-    }
-
-    [Fact]
-    public async Task InsertAsync_DeveLancarExcecao_QuandoOcorreErro()
-    {
-        // Arrange
-        var clienteDb = ClienteFakeDataFactory.CriarClienteDbValido();
-        var cancellationToken = CancellationToken.None;
-
-        _mockClienteRepository.Setup(x => x.InsertAsync(It.IsAny<ClienteDb>(), It.IsAny<CancellationToken>()))
-            .ThrowsAsync(new Exception("Erro ao inserir cliente"));
-
-        // Act & Assert
-        var exception = await Assert.ThrowsAsync<Exception>(() => _mockClienteRepository.Object.InsertAsync(clienteDb, cancellationToken));
-        Assert.Equal("Erro ao inserir cliente", exception.Message);
-        _mockClienteRepository.Verify(x => x.InsertAsync(It.IsAny<ClienteDb>(), It.IsAny<CancellationToken>()), Times.Once);
-    }
-
-    [Fact]
-    public async Task DeleteAsync_DeveDeletarCliente()
-    {
-        // Arrange
-        var clienteDb = ClienteFakeDataFactory.CriarClienteDbValido();
-        var cancellationToken = CancellationToken.None;
-
-        _mockClienteRepository.Setup(x => x.DeleteAsync(It.IsAny<ClienteDb>(), It.IsAny<CancellationToken>()))
-            .Returns(Task.CompletedTask);
-
-        // Act
-        await _mockClienteRepository.Object.DeleteAsync(clienteDb, cancellationToken);
-
-        // Assert
-        _mockClienteRepository.Verify(x => x.DeleteAsync(It.IsAny<ClienteDb>(), It.IsAny<CancellationToken>()), Times.Once);
-    }
-
-    [Fact]
-    public async Task DeleteAsync_DeveLancarExcecao_QuandoOcorreErro()
-    {
-        // Arrange
-        var clienteDb = ClienteFakeDataFactory.CriarClienteDbValido();
-        var cancellationToken = CancellationToken.None;
-
-        _mockClienteRepository.Setup(x => x.DeleteAsync(It.IsAny<ClienteDb>(), It.IsAny<CancellationToken>()))
-            .ThrowsAsync(new Exception("Erro ao deletar cliente"));
-
-        // Act & Assert
-        var exception = await Assert.ThrowsAsync<Exception>(() => _mockClienteRepository.Object.DeleteAsync(clienteDb, cancellationToken));
-        Assert.Equal("Erro ao deletar cliente", exception.Message);
-        _mockClienteRepository.Verify(x => x.DeleteAsync(It.IsAny<ClienteDb>(), It.IsAny<CancellationToken>()), Times.Once);
+        _context.Dispose();
     }
 }

@@ -18,8 +18,7 @@ namespace UseCases
         {
             ArgumentNullException.ThrowIfNull(emailVerificacao);
 
-            if (ExecutarValidacao(new ValidarEmailVerificacao(), emailVerificacao)
-                   && await cognitoGateway.ConfirmarEmailVerificacaoAsync(emailVerificacao, cancellationToken))
+            if (await cognitoGateway.ConfirmarEmailVerificacaoAsync(emailVerificacao, cancellationToken))
             {
                 return true;
             }
@@ -32,8 +31,7 @@ namespace UseCases
         {
             ArgumentNullException.ThrowIfNull(recuperacaoSenha);
 
-            if (ExecutarValidacao(new ValidarSolicitacaoRecuperacaoSenha(), recuperacaoSenha)
-                   && await cognitoGateway.SolicitarRecuperacaoSenhaAsync(recuperacaoSenha, cancellationToken))
+            if (await cognitoGateway.SolicitarRecuperacaoSenhaAsync(recuperacaoSenha, cancellationToken))
             {
                 return true;
             }
@@ -46,8 +44,7 @@ namespace UseCases
         {
             ArgumentNullException.ThrowIfNull(resetSenha);
 
-            if (ExecutarValidacao(new ValidarResetSenha(), resetSenha)
-                   && await cognitoGateway.EfetuarResetSenhaAsync(resetSenha, cancellationToken))
+            if ( await cognitoGateway.EfetuarResetSenhaAsync(resetSenha, cancellationToken))
             {
                 return true;
             }

@@ -40,7 +40,7 @@ namespace Api.Controllers
 
             var result = await produtosController.CadastrarProdutoAsync(request, cancellationToken);
 
-            return CustomResponsePost($"produtos/{request.Id}", request, result);
+            return CustomResponsePost($"produtos/{request.Id}", result, result);
         }
 
         [HttpPut("{id:guid}")]
@@ -58,13 +58,18 @@ namespace Api.Controllers
 
             var result = await produtosController.AtualizarProdutoAsync(request, cancellationToken);
 
-            return CustomResponsePutPatch(request, result);
+            return CustomResponsePutPatch(result, result);
         }
 
         [HttpDelete("{id:guid}")]
         public async Task<IActionResult> DeletarProduto([FromRoute] Guid id, CancellationToken cancellationToken)
         {
             var result = await produtosController.DeletarProdutoAsync(id, cancellationToken);
+
+            if (result)
+            {
+                return NoContent();
+            }
 
             return CustomResponseDelete(id, result);
         }
