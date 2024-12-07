@@ -1,26 +1,3 @@
-Skip to content
-Navigation Menu
-SofArc6Soat
-quickfood-backend-backoffice
-
-Type / to search
-Code
-Issues
-Pull requests
-1
-Actions
-Projects
-Wiki
-Security
-8
-Insights
-Settings
-.NET Core Tests and Deployments
-feat: teste 1 #70
-Jobs
-Run details
-Workflow file for this run
-.github/workflows/pipeline.yml at eca82f6
 name: .NET Core Tests and Deployments
 
 on:
@@ -47,7 +24,7 @@ jobs:
 
       # Restore dependencies
       - name: Restore dependencies
-        run: dotnet restore QuickFood-Backoffice.sln
+        run: dotnet restore src/Api/Api.csproj
 
       # Run unit tests
       - name: Run all tests
@@ -89,10 +66,12 @@ jobs:
         run: |
           dotnet tool install --global dotnet-sonarscanner
           echo "${DOTNET_ROOT}/tools" >> $GITHUB_PATH
+
       # 6. Instalação do dotnet-coverage
       - name: Install dotnet-coverage
         run: |
           dotnet tool install --global dotnet-coverage
+
       # 7. Configuração e análise com o SonarScanner
       - name: Build and analyze with SonarCloud
         env:
@@ -110,12 +89,17 @@ jobs:
             /d:sonar.coverage.exclusions="**/Program.cs,**/Startup.cs" \
             /d:sonar.scanner.scanAll=false \
             /d:sonar.verbose=true
-          # Build da solução
-          dotnet build QuickFood-Backoffice.sln --configuration Release  # A solução está no diretório raiz
+
+          # Build do projeto
+          dotnet build src/Api/Api.csproj --configuration Release
+
           # Execução dos testes com coleta de cobertura
-          dotnet test QuickFood-Backoffice.sln --configuration Release --no-build --collect:"XPlat Code Coverage"  # A solução está no diretório raiz
+          dotnet test src/Api/Api.csproj --configuration Release --no-build --collect:"XPlat Code Coverage"
+
           # Finalizando a análise no SonarCloud
           dotnet-sonarscanner end /d:sonar.login="${{ secrets.SONAR_TOKEN }}"
+
+
   deploy:
     runs-on: ubuntu-latest
     needs: code_analysis
@@ -173,4 +157,3 @@ jobs:
 
       - name: Build and Push Docker Image
         run: docker buildx build --push -t sofarc6soat/quickfood-backend-backoffice:latest -f ./src/Api/Dockerfile.publish .
-feat: teste 2 · SofArc6Soat/quickfood-backend-backoffice@eca82f6
