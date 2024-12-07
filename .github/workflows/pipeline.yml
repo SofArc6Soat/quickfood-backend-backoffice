@@ -78,7 +78,20 @@ jobs:
         run: |
           dotnet tool install --global dotnet-coverage
 
-      # 7. Configuração e análise com o SonarScanner
+      # 7. Execução dos testes com coleta de cobertura
+      - name: Run tests and collect coverage
+        run: |
+          dotnet test ./QuickFood-Backoffice.sln --configuration Release --no-build --collect:"XPlat Code Coverage"
+
+      # 8. Instalação e execução do ReportGenerator
+      - name: Generate coverage report
+        run: |
+          dotnet tool install -g dotnet-reportgenerator-globaltool
+          reportgenerator \
+            -reports:tests/QuickFood-Backoffice.Tests/TestResults/**/*.cobertura.xml \
+            -targetdir:coverage-reports
+
+      # 9. Configuração e análise com o SonarScanner
       - name: Build and analyze with SonarCloud
         env:
           GITHUB_TOKEN: ${{ secrets.REPO_TOKEN_GIT }}
@@ -90,7 +103,7 @@ jobs:
             /o:"sofarc6soat" \
             /d:sonar.login="${{ secrets.SONAR_TOKEN }}" \
             /d:sonar.host.url="https://sonarcloud.io" \
-            /d:sonar.cs.vscoveragexml.reportsPaths="tests/QuickFood-Backoffice.Tests/TestResults/**/coverage.cobertura.xml" \
+            /d:sonar.cs.vscoveragexml.reportsPaths="coverage-reports/coverage.cobertura.xml" \
             /d:sonar.inclusions="**/*.cs" \
             /d:sonar.coverage.exclusions="**/Program.cs,**/Startup.cs" \
             /d:sonar.verbose=true
@@ -98,11 +111,9 @@ jobs:
           # Build da solução
           dotnet build ./QuickFood-Backoffice.sln --configuration Release
 
-          # Execução dos testes com coleta de cobertura
-          dotnet test ./QuickFood-Backoffice.sln --configuration Release --no-build --collect:"XPlat Code Coverage"
-
           # Finalizando a análise no SonarCloud
           dotnet-sonarscanner end /d:sonar.login="${{ secrets.SONAR_TOKEN }}"
+
 
   deploy:
     runs-on: ubuntu-latest
