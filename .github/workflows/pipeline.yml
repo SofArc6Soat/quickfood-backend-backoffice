@@ -78,13 +78,18 @@ jobs:
         run: |
           dotnet tool install --global dotnet-coverage
 
-      # 7. Debug - Verificação do arquivo de cobertura
+      # 7. Executar os testes novamente com cobertura (antes do SonarCloud Begin)
+      - name: Run unit tests with coverage for SonarCloud
+        run: |
+          dotnet test QuickFood-Backoffice.sln --configuration Release --no-build --collect:"XPlat Code Coverage"
+
+      # 8. Debug - Verificação do arquivo de cobertura
       - name: Debug - List all test files
         run: |
           echo "Searching for coverage reports:"
           find . -name 'coverage.cobertura.xml'
 
-      # 8. Configuração e análise com o SonarScanner
+      # 9. Configuração e análise com o SonarScanner
       - name: Build and analyze with SonarCloud
         env:
           GITHUB_TOKEN: ${{ secrets.REPO_TOKEN_GIT }}
@@ -100,12 +105,6 @@ jobs:
             /d:sonar.inclusions="**/*.cs" \
             /d:sonar.coverage.exclusions="**/Program.cs,**/Startup.cs" \
             /d:sonar.verbose=true
-
-          # Build da solução
-          dotnet build ./QuickFood-Backoffice.sln --configuration Release
-
-          # Execução dos testes com coleta de cobertura
-          dotnet test ./QuickFood-Backoffice.sln --configuration Release --no-build --collect:"XPlat Code Coverage"
 
           # Finalizando a análise no SonarCloud
           dotnet-sonarscanner end /d:sonar.login="${{ secrets.SONAR_TOKEN }}"
