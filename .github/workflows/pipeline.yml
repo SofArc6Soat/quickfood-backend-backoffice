@@ -98,8 +98,6 @@ jobs:
           # Execução dos testes com coleta de cobertura
           dotnet test ./QuickFood-Backoffice.sln --configuration Release --no-build --collect:"XPlat Code Coverage"  # A solução está no diretório raiz
 
-          dotnet-trx2sonar -d ./ -o ./SonarTestResults.xml
-          
           # Finalizando a análise no SonarCloud
           dotnet-sonarscanner end /d:sonar.login="${{ secrets.SONAR_TOKEN }}"
 
