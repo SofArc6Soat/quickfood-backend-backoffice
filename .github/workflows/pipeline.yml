@@ -90,10 +90,10 @@ jobs:
             /d:sonar.verbose=true
 
           # Build da solução
-          dotnet build .\QuickFood-Backoffice.sln --configuration Release
+          dotnet build ./QuickFood-Backoffice.sln --configuration Release
 
           # Execução dos testes com coleta de cobertura
-          dotnet test .\QuickFood-Backoffice.sln --configuration Release --no-build --collect:"XPlat Code Coverage"
+          dotnet test ./QuickFood-Backoffice.sln --configuration Release --no-build --collect:"XPlat Code Coverage"
 
           # Finalizando a análise no SonarCloud
           dotnet-sonarscanner end /d:sonar.login="${{ secrets.SONAR_TOKEN }}"
