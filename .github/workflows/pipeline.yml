@@ -110,6 +110,7 @@ jobs:
             /d:sonar.inclusions="**/*.cs" \
             /d:sonar.coverage.exclusions="**/Program.cs,**/Startup.cs" \
             /d:sonar.verbose=true
+            /d:sonar.scanner.scanAll=false
   
           # Build da solução
           dotnet build ./QuickFood-Backoffice.sln --configuration Release
