@@ -29,9 +29,11 @@ jobs:
       # Run unit tests
       - name: Run all tests with coverage
         run: |
-          dotnet test QuickFood-Backoffice.sln --configuration Release --collect:"XPlat Code Coverage" \
-          --results-directory tests/TestResults
-
+          dotnet test QuickFood-Backoffice.sln \
+          --configuration Release \
+          --collect:"XPlat Code Coverage" \
+          --logger:"trx;LogFileName=TestResults.trx" \
+          --diag:log-detailed.txt
 
   code_analysis:
     runs-on: ubuntu-latest
@@ -79,7 +81,7 @@ jobs:
       - name: Debug - List all test files
         run: |
           echo "Checking for test result files:"
-          find tests/TestResults -type f
+          find . -type d -name 'TestResults' -or -name '*.trx' -or -name '*.xml'
 
       # 8. Configuração e análise com o SonarScanner
       - name: Build and analyze with SonarCloud
