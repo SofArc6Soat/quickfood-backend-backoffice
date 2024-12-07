@@ -90,7 +90,7 @@ jobs:
             /o:"sofarc6soat" \
             /d:sonar.login="${{ secrets.SONAR_TOKEN }}" \
             /d:sonar.host.url="https://sonarcloud.io" \
-            /d:sonar.cs.vscoveragexml.reportsPaths="tests/TestResults/**/coverage.cobertura.xml" \
+            /d:sonar.cs.vscoveragexml.reportsPaths="tests/QuickFood-Backoffice.Tests/TestResults/**/coverage.cobertura.xml" \
             /d:sonar.inclusions="**/*.cs" \
             /d:sonar.coverage.exclusions="**/Program.cs,**/Startup.cs" \
             /d:sonar.verbose=true
@@ -103,12 +103,6 @@ jobs:
 
           # Finalizando a análise no SonarCloud
           dotnet-sonarscanner end /d:sonar.login="${{ secrets.SONAR_TOKEN }}"
-          
-      # Verificar e listar os arquivos de cobertura gerados
-      - name: Debug - Search Coverage Reports
-        run: |
-          echo "Searching for coverage.cobertura reports:"
-          find . -name '*coverage.cobertura*' -or -name '*.xml'
 
   deploy:
     runs-on: ubuntu-latest
