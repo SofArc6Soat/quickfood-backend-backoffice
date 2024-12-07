@@ -78,27 +78,7 @@ jobs:
         run: |
           dotnet tool install --global dotnet-coverage
 
-      # Restore dependencies
-      - name: Restore dependencies
-        run: dotnet restore src/Api/Api.csproj
-
-      # Run unit tests with coverage and specify results directory
-      - name: Run all tests with coverage
-        run: |
-          dotnet test QuickFood-Backoffice.sln \
-          --configuration Release \
-          --collect:"XPlat Code Coverage" \
-          --results-directory tests/TestResults \
-          --logger:"trx;LogFileName=TestResults.trx" \
-          --diag:log-detailed.txt
-
-      # 8. Debug - Verificação do arquivo de cobertura
-      - name: Debug - List all test files
-        run: |
-          echo "Searching for coverage reports:"
-          find . -name 'coverage.cobertura.xml'
-
-      # 9. Configuração e análise com o SonarScanner
+      # 7. Configuração e análise com o SonarScanner
       - name: Build and analyze with SonarCloud
         env:
           GITHUB_TOKEN: ${{ secrets.REPO_TOKEN_GIT }}
@@ -115,8 +95,22 @@ jobs:
             /d:sonar.coverage.exclusions="**/Program.cs,**/Startup.cs" \
             /d:sonar.verbose=true
 
+          # Build da solução
+          dotnet build ./QuickFood-Backoffice.sln --configuration Release
+
+          # Execução dos testes com coleta de cobertura
+          dotnet test ./QuickFood-Backoffice.sln --configuration Release --no-build --collect:"XPlat Code Coverage"
+
           # Finalizando a análise no SonarCloud
           dotnet-sonarscanner end /d:sonar.login="${{ secrets.SONAR_TOKEN }}"
+
+          # Verificar e listar os arquivos de cobertura gerados
+          
+      - name: Search for coverage reports
+        run: |
+          echo "Searching for coverage reports:"
+          find tests/TestResults -name 'coverage.cobertura.xml'
+        shell: /usr/bin/bash -e {0}
 
   deploy:
     runs-on: ubuntu-latest
