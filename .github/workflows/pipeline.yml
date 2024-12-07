@@ -27,8 +27,9 @@ jobs:
         run: dotnet restore src/Api/Api.csproj
 
       # Run unit tests
-      - name: Run all tests
-        run: dotnet test QuickFood-Backoffice.sln --configuration Release --collect:"XPlat Code Coverage"
+      - name: Run all tests with diagnostics
+        run: dotnet test QuickFood-Backoffice.sln --configuration Release --collect:"XPlat Code Coverage" --diag:log.txt
+
 
   code_analysis:
     runs-on: ubuntu-latest
@@ -73,10 +74,11 @@ jobs:
           dotnet tool install --global dotnet-coverage
 
       # 7. Debug - Verificação do arquivo de cobertura
-      - name: Debug - Verify test results
+      - name: Debug - List all test files
         run: |
-          echo "Checking for coverage report:"
-          find tests -name 'coverage.cobertura.xml'
+          echo "Listing all files under the tests directory:"
+          find tests
+
 
       # 8. Configuração e análise com o SonarScanner
       - name: Build and analyze with SonarCloud
@@ -90,7 +92,7 @@ jobs:
             /o:"sofarc6soat" \
             /d:sonar.login="${{ secrets.SONAR_TOKEN }}" \
             /d:sonar.host.url="https://sonarcloud.io" \
-            /d:sonar.cs.vscoveragexml.reportsPaths="tests/**/coverage.cobertura.xml" \
+            /d:sonar.cs.vscoveragexml.reportsPaths="**/coverage.cobertura.xml" \
             /d:sonar.inclusions="**/*.cs" \
             /d:sonar.coverage.exclusions="**/Program.cs,**/Startup.cs" \
             /d:sonar.verbose=true
