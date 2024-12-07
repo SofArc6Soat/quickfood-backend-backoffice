@@ -26,12 +26,13 @@ jobs:
       - name: Restore dependencies
         run: dotnet restore src/Api/Api.csproj
 
-      # Run unit tests
+      # Run unit tests with coverage and specify results directory
       - name: Run all tests with coverage
         run: |
           dotnet test QuickFood-Backoffice.sln \
           --configuration Release \
           --collect:"XPlat Code Coverage" \
+          --results-directory tests/TestResults \
           --logger:"trx;LogFileName=TestResults.trx" \
           --diag:log-detailed.txt
 
@@ -80,8 +81,8 @@ jobs:
       # 7. Debug - Verificação do arquivo de cobertura
       - name: Debug - List all test files
         run: |
-          echo "Checking for test result files:"
-          find . -type d -name 'TestResults' -or -name '*.trx' -or -name '*.xml'
+          echo "Searching for coverage reports:"
+          find . -name 'coverage.cobertura.xml'
 
       # 8. Configuração e análise com o SonarScanner
       - name: Build and analyze with SonarCloud
