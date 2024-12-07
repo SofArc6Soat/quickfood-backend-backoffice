@@ -109,7 +109,7 @@ jobs:
             /d:sonar.cs.vscoveragexml.reportsPaths="coverage-reports/Cobertura.xml" \
             /d:sonar.inclusions="**/*.cs" \
             /d:sonar.coverage.exclusions="**/Program.cs,**/Startup.cs" \
-            /d:sonar.verbose=true
+            /d:sonar.verbose=true \
             /d:sonar.scanner.scanAll=false
   
           # Build da solução
