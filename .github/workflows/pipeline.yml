@@ -78,27 +78,25 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.REPO_TOKEN_GIT }}
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         run: |
+          # Iniciar o scanner do SonarCloud
           dotnet-sonarscanner begin \
             /k:"SofArc6Soat_quickfood-backend-backoffice" \
             /o:"sofarc6soat" \
             /d:sonar.login="${{ secrets.SONAR_TOKEN }}" \
             /d:sonar.host.url="https://sonarcloud.io" \
-            /d:sonar.cs.vscoveragexml.reportsPaths="coverage.xml" \
+            /d:sonar.cs.vscoveragexml.reportsPaths="tests/**/*/TestResults/**/*.cobertura.xml" \
             /d:sonar.inclusions="**/*.cs" \
             /d:sonar.coverage.exclusions="**/Program.cs,**/Startup.cs" \
             /d:sonar.scanner.scanAll=false \
             /d:sonar.verbose=true
-          
+
           # Build do projeto
           dotnet build src/Api/Api.csproj --configuration Release
 
           # Execução dos testes com coleta de cobertura
-          dotnet-coverage collect \
-            "dotnet test src/Api/Api.csproj --no-build" \
-            -f xml \
-            -o "coverage.xml"
+          dotnet test src/Api/Api.csproj --configuration Release --no-build --collect:"XPlat Code Coverage"
 
-          # Conclusão da análise
+          # Finalizando a análise no SonarCloud
           dotnet-sonarscanner end /d:sonar.login="${{ secrets.SONAR_TOKEN }}"
 
 
