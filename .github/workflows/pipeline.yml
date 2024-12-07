@@ -26,9 +26,15 @@ jobs:
       - name: Restore dependencies
         run: dotnet restore src/Api/Api.csproj
 
-      # Run unit tests
-      - name: Run all tests
-        run: dotnet test QuickFood-Backoffice.sln --configuration Release --collect:"XPlat Code Coverage"
+      # Run unit tests with coverage and specify results directory
+      - name: Run all tests with coverage
+        run: |
+          dotnet test QuickFood-Backoffice.sln \
+          --configuration Release \
+          --collect:"XPlat Code Coverage" \
+          --results-directory tests/TestResults \
+          --logger:"trx;LogFileName=TestResults.trx" \
+          --diag:log-detailed.txt
 
   code_analysis:
     runs-on: ubuntu-latest
@@ -84,7 +90,7 @@ jobs:
             /o:"sofarc6soat" \
             /d:sonar.login="${{ secrets.SONAR_TOKEN }}" \
             /d:sonar.host.url="https://sonarcloud.io" \
-            /d:sonar.cs.vscoveragexml.reportsPaths="TestResults/**/*.cobertura.xml" \
+            /d:sonar.cs.vscoveragexml.reportsPaths="tests/QuickFood-Backoffice.Tests/TestResults/**/coverage.cobertura.xml" \
             /d:sonar.inclusions="**/*.cs" \
             /d:sonar.coverage.exclusions="**/Program.cs,**/Startup.cs" \
             /d:sonar.verbose=true
@@ -97,7 +103,6 @@ jobs:
 
           # Finalizando a análise no SonarCloud
           dotnet-sonarscanner end /d:sonar.login="${{ secrets.SONAR_TOKEN }}"
-
 
   deploy:
     runs-on: ubuntu-latest
