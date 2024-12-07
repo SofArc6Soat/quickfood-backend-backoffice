@@ -50,6 +50,7 @@ jobs:
           path: ~/.sonar/cache
           key: ${{ runner.os }}-sonar
           restore-keys: ${{ runner.os }}-sonar
+        if: runner.os == 'Linux'
 
       # 4. Cache do SonarCloud Scanner
       - name: Cache SonarCloud scanner
@@ -59,6 +60,7 @@ jobs:
           path: ~/.sonar/scanner
           key: ${{ runner.os }}-sonar-scanner
           restore-keys: ${{ runner.os }}-sonar-scanner
+        if: runner.os == 'Linux'
 
       # 5. Instalação do SonarCloud Scanner
       - name: Install SonarCloud scanner
@@ -80,7 +82,7 @@ jobs:
         run: |
           # Iniciar o scanner do SonarCloud
           dotnet-sonarscanner begin \
-            /k:"SofArc6Soat_quickfood-backend-backoffice" \
+            /k:"SofArc6Soat_quickfood-backoffice" \
             /o:"sofarc6soat" \
             /d:sonar.login="${{ secrets.SONAR_TOKEN }}" \
             /d:sonar.host.url="https://sonarcloud.io" \
@@ -91,13 +93,16 @@ jobs:
             /d:sonar.verbose=true
 
           # Build da solução
-          dotnet build QuickFood-Backoffice.sln --configuration Release  # A solução está no diretório raiz
+          dotnet build ./QuickFood-Backoffice.sln --configuration Release  # A solução está no diretório raiz
 
           # Execução dos testes com coleta de cobertura
-          dotnet test QuickFood-Backoffice.sln --configuration Release --no-build --collect:"XPlat Code Coverage"  # A solução está no diretório raiz
+          dotnet test ./QuickFood-Backoffice.sln --configuration Release --no-build --collect:"XPlat Code Coverage"  # A solução está no diretório raiz
 
+          dotnet-trx2sonar -d ./ -o ./SonarTestResults.xml
+          
           # Finalizando a análise no SonarCloud
           dotnet-sonarscanner end /d:sonar.login="${{ secrets.SONAR_TOKEN }}"
+
 
   deploy:
     runs-on: ubuntu-latest
