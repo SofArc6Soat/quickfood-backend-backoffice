@@ -27,7 +27,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\Api\Api.csproj" />
-    <ProjectReference Include="..\Domain.Tests\Domain.Tests.csproj" />
+    <ProjectReference Include="..\QuickFood-Backoffice.Tests\QuickFood-Backoffice.Tests.csproj" />
   </ItemGroup>
 
   <ItemGroup>
