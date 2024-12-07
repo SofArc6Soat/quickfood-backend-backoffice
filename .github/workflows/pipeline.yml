@@ -24,7 +24,7 @@ jobs:
 
       # Restore dependencies
       - name: Restore dependencies
-        run: dotnet restore src/Api/Api.csproj
+        run: dotnet restore QuickFood-Backoffice.sln
 
       # Run unit tests
       - name: Run all tests
@@ -90,15 +90,14 @@ jobs:
             /d:sonar.scanner.scanAll=false \
             /d:sonar.verbose=true
 
-          # Build do projeto
-          dotnet build src/Api/Api.csproj --configuration Release
+          # Build da solução
+          dotnet build QuickFood-Backoffice.sln --configuration Release  # A solução está no diretório raiz
 
           # Execução dos testes com coleta de cobertura
-          dotnet test src/Api/Api.csproj --configuration Release --no-build --collect:"XPlat Code Coverage"
+          dotnet test QuickFood-Backoffice.sln --configuration Release --no-build --collect:"XPlat Code Coverage"  # A solução está no diretório raiz
 
           # Finalizando a análise no SonarCloud
           dotnet-sonarscanner end /d:sonar.login="${{ secrets.SONAR_TOKEN }}"
-
 
   deploy:
     runs-on: ubuntu-latest
