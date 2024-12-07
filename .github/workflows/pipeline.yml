@@ -81,7 +81,9 @@ jobs:
       # 7. Execução dos testes com coleta de cobertura
       - name: Run tests and collect coverage
         run: |
-          dotnet test ./QuickFood-Backoffice.sln --configuration Release --no-build --collect:"XPlat Code Coverage"
+          dotnet test ./tests/QuickFood-Backoffice.Tests/QuickFood-Backoffice.Tests.csproj \
+          --configuration Release \
+          --collect:"XPlat Code Coverage"
   
       # 8. Instalação e execução do ReportGenerator
       - name: Generate coverage report
