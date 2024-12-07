@@ -72,7 +72,13 @@ jobs:
         run: |
           dotnet tool install --global dotnet-coverage
 
-      # 7. Configuração e análise com o SonarScanner
+      # 7. Debug - Verificação do arquivo de cobertura
+      - name: Debug - Verify test results
+        run: |
+          echo "Checking for coverage report:"
+          find tests -name 'coverage.cobertura.xml'
+
+      # 8. Configuração e análise com o SonarScanner
       - name: Build and analyze with SonarCloud
         env:
           GITHUB_TOKEN: ${{ secrets.REPO_TOKEN_GIT }}
@@ -84,7 +90,7 @@ jobs:
             /o:"sofarc6soat" \
             /d:sonar.login="${{ secrets.SONAR_TOKEN }}" \
             /d:sonar.host.url="https://sonarcloud.io" \
-            /d:sonar.cs.vscoveragexml.reportsPaths="tests/**/*coverage.cobertura.xml" \
+            /d:sonar.cs.vscoveragexml.reportsPaths="tests/**/coverage.cobertura.xml" \
             /d:sonar.inclusions="**/*.cs" \
             /d:sonar.coverage.exclusions="**/Program.cs,**/Startup.cs" \
             /d:sonar.verbose=true
@@ -97,7 +103,6 @@ jobs:
 
           # Finalizando a análise no SonarCloud
           dotnet-sonarscanner end /d:sonar.login="${{ secrets.SONAR_TOKEN }}"
-
 
   deploy:
     runs-on: ubuntu-latest
